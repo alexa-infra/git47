@@ -1,0 +1,18 @@
+<html>
+    <body>
+      <ul>
+        {{ if .ParentPath -}}
+          <li><a href="{{ .ParentPath }}">..</a></li>
+        {{ end -}}
+        {{ range $key, $value := .Dirs }}
+        <li><a href="{{ $value }}">{{ $key }}</a></li>
+        {{- end }}
+      </ul>
+      <ul>
+        {{ range $key, $value :=  .Files }}
+        <li><a href="{{ $value }}">{{ $key }}</a></li>
+        {{- end }}
+      </ul>
+    </body>
+</html>
+
