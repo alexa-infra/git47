@@ -6,7 +6,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/gorilla/mux"
-	"html/template"
 	"log"
 	"net/http"
 )
@@ -62,15 +61,11 @@ func main() {
 	s.HandleFunc("/{repo}/commit/{hash}", handler(gitDiff)).Name("commit")
 	s.HandleFunc("/{repo}/contributors", handler(notImplemented)).Name("contributors")
 
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+
 	// Start server
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":1323", nil))
-}
-
-var templates = template.Must(template.ParseGlob("views/*.html"))
-
-func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) error {
-	return templates.ExecuteTemplate(w, tmpl, data)
 }
 
 func notImplemented(w http.ResponseWriter, r *http.Request) {

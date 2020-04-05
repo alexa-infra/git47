@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gorilla/mux"
+	"html/template"
 	"net/http"
 	"path"
 	"strings"
@@ -29,6 +30,8 @@ func joinURL(base string, paths ...string) string {
 	}
 	return fmt.Sprintf("%s/%s", strings.TrimRight(base, "/"), strings.TrimLeft(p, "/"))
 }
+
+var gitTreeTemplate = template.Must(template.ParseFiles("views/base.html", "views/git-list.html"))
 
 func gitTree(w http.ResponseWriter, r *http.Request) {
 	g := getRepoVar(r)
@@ -95,7 +98,7 @@ func gitTree(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 
-	err = renderTemplate(w, "git-list.html", data)
+	err = gitTreeTemplate.ExecuteTemplate(w, "layout", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"html/template"
 	"net/http"
 	"strings"
 )
+
+var gitLogTemplate = template.Must(template.ParseFiles("views/base.html", "views/git-diff.html"))
 
 func gitLog(w http.ResponseWriter, r *http.Request) {
 	g := getRepoVar(r)
@@ -45,7 +48,7 @@ func gitLog(w http.ResponseWriter, r *http.Request) {
 		items = append(items, fmt.Sprintf("%s %s", c.Hash, strings.Trim(c.Message, "\n")))
 	}
 
-	err = renderTemplate(w, "git-diff.html", items)
+	err = gitLogTemplate.ExecuteTemplate(w, "layout", items)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
