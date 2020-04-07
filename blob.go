@@ -16,7 +16,7 @@ func gitBlob(w http.ResponseWriter, r *http.Request) {
 
 	hash := plumbing.NewHash(hashStr)
 	if hash.IsZero() {
-		http.Error(w, "Invalid hash", http.StatusInternalServerError)
+		http.Error(w, errBlobNotFound.Error(), http.StatusNotFound)
 		return
 	}
 

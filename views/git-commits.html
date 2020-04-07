@@ -1,0 +1,11 @@
+{{ define "title" }}Git commits{{ end }}
+
+{{ define "content" }}
+  <ul>
+    {{ range .Commits }}
+    <li>
+      <a href="{{ .URL }}">{{ .Message }} ({{ .Hash }})</a>
+    </li>
+    {{- end }}
+  </ul>
+{{ end }}

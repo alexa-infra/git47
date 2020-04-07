@@ -1,15 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
 	"strings"
 )
 
-var gitLogTemplate = template.Must(template.ParseFiles("views/base.html", "views/git-diff.html"))
+var gitLogTemplate = template.Must(template.ParseFiles("views/base.html", "views/git-commits.html"))
+
+type commitData struct {
+	URL     string
+	Hash    string
+	Message string
+}
+
+type commitsViewData struct {
+	Commits []commitData
+}
 
 func gitLog(w http.ResponseWriter, r *http.Request) {
 	g := getRepoVar(r)
@@ -26,7 +36,7 @@ func gitLog(w http.ResponseWriter, r *http.Request) {
 	if next != "" {
 		ref = plumbing.NewHash(next)
 		if ref.IsZero() {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, errRefNotFound.Error(), http.StatusNotFound)
 			return
 		}
 	}
@@ -38,17 +48,31 @@ func gitLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	router := getRouter(r)
+	commitRoute := router.Get("commit")
+	vars := mux.Vars(r)
+	repoName := vars["repo"]
+
+	var data commitsViewData
+
 	// ... just iterates over the commits
-	var items []string
 	for i := 0; i < 20; i++ {
 		c, err := cIter.Next()
 		if err != nil {
 			break
 		}
-		items = append(items, fmt.Sprintf("%s %s", c.Hash, strings.Trim(c.Message, "\n")))
+		commitURL, err := commitRoute.URLPath("repo", repoName, "hash", c.Hash.String())
+		if err != nil {
+			break
+		}
+		data.Commits = append(data.Commits, commitData{
+			URL:     commitURL.Path,
+			Message: strings.Trim(c.Message, "\n"),
+			Hash:    c.Hash.String(),
+		})
 	}
 
-	err = gitLogTemplate.ExecuteTemplate(w, "layout", items)
+	err = gitLogTemplate.ExecuteTemplate(w, "layout", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

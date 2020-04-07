@@ -24,7 +24,8 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request), router *mux.Router
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		ctx := context.WithValue(r.Context(), gitRepoKey, g)
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, gitRepoKey, g)
 		ctx = context.WithValue(ctx, routerKey, router)
 		r = r.WithContext(ctx)
 		fn(w, r)
@@ -45,23 +46,25 @@ func getRouter(r *http.Request) *mux.Router {
 	return nil
 }
 
-func main() {
-	r := mux.NewRouter()
-	s := r.PathPrefix("/r").Subrouter()
-
+func makeRoutes(r *mux.Router) {
 	handler := func(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
-		return makeHandler(fn, s)
+		return makeHandler(fn, r)
 	}
 
-	s.HandleFunc("/{repo}", handler(notImplemented)).Name("summary")
-	s.PathPrefix("/{repo}/tree/{ref}").HandlerFunc(handler(gitTree)).Name("tree")
-	s.PathPrefix("/{repo}/blob/{hash}").HandlerFunc(handler(gitBlob)).Name("blob")
-	s.HandleFunc("/{repo}/archive/{ref}.tar.gz", handler(notImplemented)).Name("archive")
-	s.HandleFunc("/{repo}/commits/{ref}", handler(gitLog)).Name("commits")
-	s.HandleFunc("/{repo}/commit/{hash}", handler(gitDiff)).Name("commit")
-	s.HandleFunc("/{repo}/contributors", handler(notImplemented)).Name("contributors")
+	r.HandleFunc("/r/{repo}", handler(notImplemented)).Name("summary")
+	r.PathPrefix("/r/{repo}/tree/{ref}").HandlerFunc(handler(gitTree)).Name("tree")
+	r.PathPrefix("/r/{repo}/blob/{hash}").HandlerFunc(handler(gitBlob)).Name("blob")
+	r.HandleFunc("/r/{repo}/archive/{ref}.tar.gz", handler(notImplemented)).Name("archive")
+	r.HandleFunc("/r/{repo}/commits/{ref}", handler(gitLog)).Name("commits")
+	r.HandleFunc("/r/{repo}/commit/{hash}", handler(gitDiff)).Name("commit")
+	r.HandleFunc("/r/{repo}/contributors", handler(notImplemented)).Name("contributors")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+}
+
+func main() {
+	r := mux.NewRouter()
+	makeRoutes(r)
 
 	// Start server
 	http.Handle("/", r)
@@ -81,6 +84,7 @@ var repositories = map[string]string{
 var (
 	errRefNotFound  = errors.New("Ref not found")
 	errRepoNotFound = errors.New("Repository not found")
+	errBlobNotFound = errors.New("Blob not found")
 )
 
 func getRepo(r *http.Request) (*git.Repository, error) {
