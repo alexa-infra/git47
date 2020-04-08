@@ -1,15 +1,14 @@
-package main
+package handlers
 
 import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/gorilla/mux"
-	"html/template"
 	"net/http"
 	"strings"
 )
 
-var gitLogTemplate = template.Must(template.ParseFiles("views/base.html", "views/git-commits.html"))
+var gitLogTemplate = parseTemplate("templates/base.html", "templates/git-commits.html")
 
 type commitData struct {
 	URL     string

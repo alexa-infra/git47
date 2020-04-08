@@ -1,15 +1,13 @@
-package main
+package handlers
 
 import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/gorilla/mux"
-	"html/template"
+	"io/ioutil"
 	"net/http"
 )
 
-var gitDiffTemplate = template.Must(template.ParseFiles("views/base.html", "views/git-diff.html"))
-
-func gitDiff(w http.ResponseWriter, r *http.Request) {
+func gitBlob(w http.ResponseWriter, r *http.Request) {
 	g := getRepoVar(r)
 
 	vars := mux.Vars(r)
@@ -17,23 +15,29 @@ func gitDiff(w http.ResponseWriter, r *http.Request) {
 
 	hash := plumbing.NewHash(hashStr)
 	if hash.IsZero() {
-		http.Error(w, "Invalid hash", http.StatusInternalServerError)
+		http.Error(w, errBlobNotFound.Error(), http.StatusNotFound)
 		return
 	}
 
-	commit, err := g.CommitObject(hash)
+	blob, err := g.BlobObject(hash)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	stats, err := commit.Stats()
+	reader, err := blob.Reader()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = gitDiffTemplate.ExecuteTemplate(w, "layout", stats)
+	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

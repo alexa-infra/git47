@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"context"
@@ -15,7 +15,7 @@ func TestGitBlob(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/r/memory/blob/5e1c309dae7f45e0f39b1bf3ac3cd9db12e7d689/foo/bar", nil)
 
 	router := mux.NewRouter()
-	makeRoutes(router)
+	MakeRoutes(router)
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, gitRepoKey, r)
@@ -40,7 +40,7 @@ func TestGitBlobNotFound(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/r/memory/blob/blah/foo/bar", nil)
 
 	router := mux.NewRouter()
-	makeRoutes(router)
+	MakeRoutes(router)
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, gitRepoKey, r)

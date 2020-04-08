@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"context"
@@ -15,7 +15,7 @@ func TestGitDiff(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/r/memory/commit/60a58ae38710f264b2c00f77c82ae44419381a3f", nil)
 
 	router := mux.NewRouter()
-	makeRoutes(router)
+	MakeRoutes(router)
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, gitRepoKey, r)

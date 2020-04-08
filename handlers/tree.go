@@ -1,12 +1,9 @@
-package main
+package handlers
 
 import (
-	"fmt"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gorilla/mux"
-	"html/template"
 	"net/http"
-	"path"
 	"strings"
 )
 
@@ -16,22 +13,7 @@ type treeViewData struct {
 	ParentPath string
 }
 
-func parentPath(path string) string {
-	if strings.Index(path, "/") > -1 {
-		return path[:strings.LastIndex(path, "/")]
-	}
-	return ""
-}
-
-func joinURL(base string, paths ...string) string {
-	p := path.Join(paths...)
-	if p == "" {
-		return strings.TrimRight(base, "/")
-	}
-	return fmt.Sprintf("%s/%s", strings.TrimRight(base, "/"), strings.TrimLeft(p, "/"))
-}
-
-var gitTreeTemplate = template.Must(template.ParseFiles("views/base.html", "views/git-list.html"))
+var gitTreeTemplate = parseTemplate("templates/base.html", "templates/git-list.html")
 
 func gitTree(w http.ResponseWriter, r *http.Request) {
 	g := getRepoVar(r)

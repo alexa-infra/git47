@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"context"
@@ -15,7 +15,7 @@ func TestGitLog(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/r/memory/commits/master", nil)
 
 	router := mux.NewRouter()
-	makeRoutes(router)
+	MakeRoutes(router)
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, gitRepoKey, r)
@@ -41,7 +41,7 @@ func TestGitLogNext(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/r/memory/commits/master?next=17a958a4b3f7f1aa265f782cf6e01e24cd4010cf", nil)
 
 	router := mux.NewRouter()
-	makeRoutes(router)
+	MakeRoutes(router)
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, gitRepoKey, r)
@@ -67,7 +67,7 @@ func TestGitLogNextNotFound(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/r/memory/commits/master?next=blah", nil)
 
 	router := mux.NewRouter()
-	makeRoutes(router)
+	MakeRoutes(router)
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, gitRepoKey, r)
