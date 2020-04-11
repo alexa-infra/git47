@@ -18,4 +18,4 @@ static/output.css: css/styles.css css/content.css
 all: git47 static/output.css
 
 dev:
-	APPROOT=${ROOT_DIR} modd
+	modd

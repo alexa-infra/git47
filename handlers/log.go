@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-var gitLogTemplate = parseTemplate("templates/base.html", "templates/git-commits.html")
-
 type commitData struct {
 	URL     string
 	Hash    string
@@ -20,13 +18,15 @@ type commitsViewData struct {
 	Commits []commitData
 }
 
-func gitLog(w http.ResponseWriter, r *http.Request) {
-	g := getRepoVar(r)
+func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
+	g, err := getRepo(env, r)
+	if err != nil {
+		return StatusError{http.StatusNotFound, err}
+	}
 
 	ref, err := getRef(r, g)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
+		return StatusError{http.StatusNotFound, err}
 	}
 
 	query := r.URL.Query()
@@ -35,19 +35,17 @@ func gitLog(w http.ResponseWriter, r *http.Request) {
 	if next != "" {
 		ref = plumbing.NewHash(next)
 		if ref.IsZero() {
-			http.Error(w, errRefNotFound.Error(), http.StatusNotFound)
-			return
+			return StatusError{http.StatusBadRequest, errInvalidHash}
 		}
 	}
 
 	// ... retrieves the commit history
 	cIter, err := g.Log(&git.LogOptions{From: ref})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
-	router := getRouter(r)
+	router := env.Router
 	commitRoute := router.Get("commit")
 	vars := mux.Vars(r)
 	repoName := vars["repo"]
@@ -71,9 +69,10 @@ func gitLog(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	err = gitLogTemplate.ExecuteTemplate(w, "layout", data)
+	template, err := env.Template.GetTemplate("git-commits.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
+
+	return template.ExecuteTemplate(w, "layout", data)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -80,4 +81,26 @@ func prepareRepository(t *testing.T) *git.Repository {
 	require.Nil(t, err)
 
 	return r
+}
+
+func makeTestEnv(t *testing.T) *Env {
+	r := mux.NewRouter()
+	repo := prepareRepository(t)
+
+	env := &Env{
+		Router: r,
+		Template: &TemplateConfig{
+			Path: "../templates",
+		},
+		Repositories: RepoMap{
+			"memory": &RepoConfig{
+				InMemory: repo,
+			},
+		},
+		Static: &StaticConfig{
+			Path: "../static",
+		},
+	}
+	env.Setup()
+	return env
 }

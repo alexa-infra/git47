@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -10,22 +9,13 @@ import (
 )
 
 func TestTreeMaster(t *testing.T) {
-	r := prepareRepository(t)
+	env := makeTestEnv(t)
 
 	req, _ := http.NewRequest("GET", "/r/memory/tree/master", nil)
-
-	router := mux.NewRouter()
-	MakeRoutes(router)
-
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, gitRepoKey, r)
-	ctx = context.WithValue(ctx, routerKey, router)
-	req = req.WithContext(ctx)
-
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(gitTree)
+	handler := http.HandlerFunc(makeHandler(gitTree, env))
 
 	handler.ServeHTTP(rr, req)
 
@@ -36,22 +26,13 @@ func TestTreeMaster(t *testing.T) {
 }
 
 func TestTreeMasterSubtree(t *testing.T) {
-	r := prepareRepository(t)
+	env := makeTestEnv(t)
 
 	req, _ := http.NewRequest("GET", "/r/memory/tree/master/bar", nil)
-
-	router := mux.NewRouter()
-	MakeRoutes(router)
-
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, gitRepoKey, r)
-	ctx = context.WithValue(ctx, routerKey, router)
-	req = req.WithContext(ctx)
-
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(gitTree)
+	handler := http.HandlerFunc(makeHandler(gitTree, env))
 
 	handler.ServeHTTP(rr, req)
 
@@ -61,22 +42,13 @@ func TestTreeMasterSubtree(t *testing.T) {
 }
 
 func TestTreeMasterSubtreeNotFound(t *testing.T) {
-	r := prepareRepository(t)
+	env := makeTestEnv(t)
 
 	req, _ := http.NewRequest("GET", "/r/memory/tree/master/foobar", nil)
-
-	router := mux.NewRouter()
-	MakeRoutes(router)
-
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, gitRepoKey, r)
-	ctx = context.WithValue(ctx, routerKey, router)
-	req = req.WithContext(ctx)
-
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(gitTree)
+	handler := http.HandlerFunc(makeHandler(gitTree, env))
 
 	handler.ServeHTTP(rr, req)
 

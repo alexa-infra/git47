@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -21,10 +20,6 @@ func TestGetRef(t *testing.T) {
 
 	for refName, refHash := range testData {
 		req, _ := http.NewRequest("GET", "/r/memory/tree/master", nil)
-
-		ctx := req.Context()
-		ctx = context.WithValue(ctx, gitRepoKey, r)
-		req = req.WithContext(ctx)
 		req = mux.SetURLVars(req, map[string]string{"ref": refName})
 
 		hash, err := getRef(req, r)

@@ -6,35 +6,34 @@ import (
 	"net/http"
 )
 
-var gitDiffTemplate = parseTemplate("templates/base.html", "templates/git-diff.html")
-
-func gitDiff(w http.ResponseWriter, r *http.Request) {
-	g := getRepoVar(r)
+func gitDiff(env *Env, w http.ResponseWriter, r *http.Request) error {
+	g, err := getRepo(env, r)
+	if err != nil {
+		return StatusError{http.StatusNotFound, err}
+	}
 
 	vars := mux.Vars(r)
 	hashStr := vars["hash"]
 
 	hash := plumbing.NewHash(hashStr)
 	if hash.IsZero() {
-		http.Error(w, "Invalid hash", http.StatusInternalServerError)
-		return
+		return StatusError{http.StatusBadRequest, errInvalidHash}
 	}
 
 	commit, err := g.CommitObject(hash)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	stats, err := commit.Stats()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
-	err = gitDiffTemplate.ExecuteTemplate(w, "layout", stats)
+	template, err := env.Template.GetTemplate("git-diff.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
+
+	return template.ExecuteTemplate(w, "layout", stats)
 }

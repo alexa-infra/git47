@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -10,22 +9,13 @@ import (
 )
 
 func TestGitLog(t *testing.T) {
-	r := prepareRepository(t)
+	env := makeTestEnv(t)
 
 	req, _ := http.NewRequest("GET", "/r/memory/commits/master", nil)
-
-	router := mux.NewRouter()
-	MakeRoutes(router)
-
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, gitRepoKey, r)
-	ctx = context.WithValue(ctx, routerKey, router)
-	req = req.WithContext(ctx)
-
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(gitLog)
+	handler := http.HandlerFunc(makeHandler(gitLog, env))
 
 	handler.ServeHTTP(rr, req)
 
@@ -36,22 +26,13 @@ func TestGitLog(t *testing.T) {
 }
 
 func TestGitLogNext(t *testing.T) {
-	r := prepareRepository(t)
+	env := makeTestEnv(t)
 
 	req, _ := http.NewRequest("GET", "/r/memory/commits/master?next=17a958a4b3f7f1aa265f782cf6e01e24cd4010cf", nil)
-
-	router := mux.NewRouter()
-	MakeRoutes(router)
-
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, gitRepoKey, r)
-	ctx = context.WithValue(ctx, routerKey, router)
-	req = req.WithContext(ctx)
-
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(gitLog)
+	handler := http.HandlerFunc(makeHandler(gitLog, env))
 
 	handler.ServeHTTP(rr, req)
 
@@ -62,24 +43,15 @@ func TestGitLogNext(t *testing.T) {
 }
 
 func TestGitLogNextNotFound(t *testing.T) {
-	r := prepareRepository(t)
+	env := makeTestEnv(t)
 
 	req, _ := http.NewRequest("GET", "/r/memory/commits/master?next=blah", nil)
-
-	router := mux.NewRouter()
-	MakeRoutes(router)
-
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, gitRepoKey, r)
-	ctx = context.WithValue(ctx, routerKey, router)
-	req = req.WithContext(ctx)
-
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(gitLog)
+	handler := http.HandlerFunc(makeHandler(gitLog, env))
 
 	handler.ServeHTTP(rr, req)
 
-	assert.Equal(t, rr.Code, http.StatusNotFound, rr.Body.String())
+	assert.Equal(t, rr.Code, http.StatusBadRequest, rr.Body.String())
 }

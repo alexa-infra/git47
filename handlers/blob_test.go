@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -10,22 +9,13 @@ import (
 )
 
 func TestGitBlob(t *testing.T) {
-	r := prepareRepository(t)
+	env := makeTestEnv(t)
 
 	req, _ := http.NewRequest("GET", "/r/memory/blob/5e1c309dae7f45e0f39b1bf3ac3cd9db12e7d689/foo/bar", nil)
-
-	router := mux.NewRouter()
-	MakeRoutes(router)
-
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, gitRepoKey, r)
-	ctx = context.WithValue(ctx, routerKey, router)
-	req = req.WithContext(ctx)
-
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "hash": "5e1c309dae7f45e0f39b1bf3ac3cd9db12e7d689"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(gitBlob)
+	handler := http.HandlerFunc(makeHandler(gitBlob, env))
 
 	handler.ServeHTTP(rr, req)
 
@@ -35,24 +25,15 @@ func TestGitBlob(t *testing.T) {
 }
 
 func TestGitBlobNotFound(t *testing.T) {
-	r := prepareRepository(t)
+	env := makeTestEnv(t)
 
 	req, _ := http.NewRequest("GET", "/r/memory/blob/blah/foo/bar", nil)
-
-	router := mux.NewRouter()
-	MakeRoutes(router)
-
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, gitRepoKey, r)
-	ctx = context.WithValue(ctx, routerKey, router)
-	req = req.WithContext(ctx)
-
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "hash": "blah"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(gitBlob)
+	handler := http.HandlerFunc(makeHandler(gitBlob, env))
 
 	handler.ServeHTTP(rr, req)
 
-	assert.Equal(t, rr.Code, http.StatusNotFound, rr.Body.String())
+	assert.Equal(t, rr.Code, http.StatusBadRequest, rr.Body.String())
 }

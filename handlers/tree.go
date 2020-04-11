@@ -13,37 +13,35 @@ type treeViewData struct {
 	ParentPath string
 }
 
-var gitTreeTemplate = parseTemplate("templates/base.html", "templates/git-list.html")
+func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
+	g, err := getRepo(env, r)
+	if err != nil {
+		return StatusError{http.StatusNotFound, err}
+	}
 
-func gitTree(w http.ResponseWriter, r *http.Request) {
-	g := getRepoVar(r)
-	router := getRouter(r)
+	router := env.Router
 	vars := mux.Vars(r)
 	repoName := vars["repo"]
 	refName := vars["ref"]
 
 	ref, err := getRef(r, g)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
+		return StatusError{http.StatusNotFound, err}
 	}
 
 	commit, err := g.CommitObject(ref)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	tree, err := commit.Tree()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	baseURL, err := router.Get("tree").URLPath("repo", repoName, "ref", refName)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	path := r.URL.Path[len(baseURL.Path):]
@@ -52,8 +50,7 @@ func gitTree(w http.ResponseWriter, r *http.Request) {
 	if path != "" {
 		tree, err = tree.Tree(path)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
+			return StatusError{http.StatusNotFound, err}
 		}
 	}
 
@@ -80,9 +77,10 @@ func gitTree(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 
-	err = gitTreeTemplate.ExecuteTemplate(w, "layout", data)
+	template, err := env.Template.GetTemplate("git-list.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
+
+	return template.ExecuteTemplate(w, "layout", data)
 }

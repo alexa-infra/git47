@@ -7,39 +7,35 @@ import (
 	"net/http"
 )
 
-func gitBlob(w http.ResponseWriter, r *http.Request) {
-	g := getRepoVar(r)
+func gitBlob(env *Env, w http.ResponseWriter, r *http.Request) error {
+	g, err := getRepo(env, r)
+	if err != nil {
+		return StatusError{http.StatusNotFound, err}
+	}
 
 	vars := mux.Vars(r)
 	hashStr := vars["hash"]
 
 	hash := plumbing.NewHash(hashStr)
 	if hash.IsZero() {
-		http.Error(w, errBlobNotFound.Error(), http.StatusNotFound)
-		return
+		return StatusError{http.StatusBadRequest, errInvalidHash}
 	}
 
 	blob, err := g.BlobObject(hash)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return StatusError{http.StatusNotFound, err}
 	}
 
 	reader, err := blob.Reader()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	_, err = w.Write(data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	return err
 }
