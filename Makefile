@@ -5,8 +5,8 @@ git47: *.go
 	go build
 
 check:
-	go fmt **/*.go
-	golint **/*.go
+	gofmt -l -w **/*.go
+	golint ./...
 
 clean:
 	rm git47
