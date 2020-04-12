@@ -83,14 +83,21 @@ func prepareRepository(t *testing.T) *git.Repository {
 	return r
 }
 
+var tEnv *Env
+
 func makeTestEnv(t *testing.T) *Env {
+	if tEnv != nil {
+		return tEnv
+	}
+
 	r := mux.NewRouter()
 	repo := prepareRepository(t)
 
 	env := &Env{
 		Router: r,
 		Template: &TemplateConfig{
-			Path: "../templates",
+			Path:     "../templates",
+			UseCache: true,
 		},
 		Repositories: RepoMap{
 			"memory": &RepoConfig{
@@ -102,5 +109,6 @@ func makeTestEnv(t *testing.T) *Env {
 		},
 	}
 	env.Setup()
+	tEnv = env
 	return env
 }

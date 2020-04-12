@@ -15,11 +15,26 @@ var (
 type TemplateMap map[string]*template.Template
 
 type TemplateConfig struct {
-	Path  string
-	cache TemplateMap
+	Path     string
+	UseCache bool
+	cache    TemplateMap
 }
 
 func (tc *TemplateConfig) GetTemplate(name string) (*template.Template, error) {
+	if !tc.UseCache {
+		pagePath := filepath.Join(tc.Path, name)
+		layoutsPath := filepath.Join(tc.Path, "layouts", "*.html")
+		layouts, err := filepath.Glob(layoutsPath)
+		if err != nil {
+			return nil, err
+		}
+		files := append(layouts, pagePath)
+		t, err := template.ParseFiles(files...)
+		if err != nil {
+			return nil, err
+		}
+		return t, nil
+	}
 	if tc.cache == nil {
 		return nil, errNoTemplateSetup
 	}
@@ -31,6 +46,9 @@ func (tc *TemplateConfig) GetTemplate(name string) (*template.Template, error) {
 }
 
 func (tc *TemplateConfig) Setup() {
+	if !tc.UseCache {
+		return
+	}
 	if tc.cache == nil {
 		tc.cache = make(TemplateMap)
 	}

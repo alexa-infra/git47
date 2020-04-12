@@ -18,8 +18,8 @@ type fileData struct {
 }
 
 type treeViewData struct {
-	Files      []fileData
-	Dirs       []dirData
+	Files []fileData
+	Dirs  []dirData
 }
 
 func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
@@ -67,7 +67,7 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 	if path != "" {
 		parentDir := dirData{
 			Name: "..",
-			URL: joinURL(baseURL.Path, parentPath(path)),
+			URL:  joinURL(baseURL.Path, parentPath(path)),
 		}
 		data.Dirs = append(data.Dirs, parentDir)
 	}
@@ -89,13 +89,13 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 			uniqDirs[folderName] = true
 			dir := dirData{
 				Name: folderName,
-				URL: joinURL(baseURL.Path, path, folderName),
+				URL:  joinURL(baseURL.Path, path, folderName),
 			}
 			data.Dirs = append(data.Dirs, dir)
 		} else {
 			file := fileData{
 				Name: f.Name,
-				URL: joinURL(blobURL.Path, path, f.Name),
+				URL:  joinURL(blobURL.Path, path, f.Name),
 			}
 			data.Files = append(data.Files, file)
 		}

@@ -6,9 +6,14 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"flag"
 )
 
 func main() {
+	var noCache bool
+	flag.BoolVar(&noCache, "nocache", false, "disable template cache")
+	flag.Parse()
+
 	r := mux.NewRouter()
 	r.Use(mw.Logging)
 
@@ -16,6 +21,7 @@ func main() {
 		Router: r,
 		Template: &TemplateConfig{
 			Path: "./templates",
+			UseCache: !noCache,
 		},
 		Repositories: RepoMap{
 			"friday": &RepoConfig{
@@ -33,5 +39,5 @@ func main() {
 
 	// Start server
 	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe(":1323", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
