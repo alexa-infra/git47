@@ -31,10 +31,11 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 
 	query := r.URL.Query()
 	next := query.Get("next")
+	nextRef := plumbing.ZeroHash
 
 	if next != "" {
-		ref = plumbing.NewHash(next)
-		if ref.IsZero() {
+		nextRef = plumbing.NewHash(next)
+		if nextRef.IsZero() {
 			return StatusError{http.StatusBadRequest, errInvalidHash}
 		}
 	}
@@ -58,6 +59,12 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			break
 		}
+		if !nextRef.IsZero() {
+			if nextRef != c.Hash {
+				continue
+			}
+			nextRef = plumbing.ZeroHash
+		}
 		commitURL, err := commitRoute.URLPath("repo", repoName, "hash", c.Hash.String())
 		if err != nil {
 			break
@@ -67,6 +74,13 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 			Message: strings.Trim(c.Message, "\n"),
 			Hash:    c.Hash.String(),
 		})
+		if len(data.Commits) >= 20 {
+			break
+		}
+	}
+
+	if !nextRef.IsZero() {
+		return StatusError{http.StatusNotFound, err}
 	}
 
 	template, err := env.Template.GetTemplate("git-commits.html")
