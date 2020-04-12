@@ -20,7 +20,7 @@ func (env *Env) Setup() {
 
 	r.HandleFunc("/r/{repo}", handler(notImplemented)).Name("summary")
 	r.PathPrefix("/r/{repo}/tree/{ref}").HandlerFunc(handler(gitTree)).Name("tree")
-	r.PathPrefix("/r/{repo}/blob/{hash}").HandlerFunc(handler(gitBlob)).Name("blob")
+	r.PathPrefix("/r/{repo}/blob/{ref}").HandlerFunc(handler(gitBlob)).Name("blob")
 	r.HandleFunc("/r/{repo}/archive/{ref}.tar.gz", handler(notImplemented)).Name("archive")
 	r.HandleFunc("/r/{repo}/commits/{ref}", handler(gitLog)).Name("commits")
 	r.HandleFunc("/r/{repo}/commit/{hash}", handler(gitDiff)).Name("commit")
