@@ -7,10 +7,19 @@ import (
 	"strings"
 )
 
+type dirData struct {
+	Name string
+	URL  string
+}
+
+type fileData struct {
+	Name string
+	URL  string
+}
+
 type treeViewData struct {
-	Files      map[string]string
-	Dirs       map[string]string
-	ParentPath string
+	Files      []fileData
+	Dirs       []dirData
 }
 
 func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
@@ -55,27 +64,46 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 	}
 
 	var data treeViewData
-	data.Dirs = make(map[string]string)
-	data.Files = make(map[string]string)
 	if path != "" {
-		data.ParentPath = joinURL(baseURL.Path, parentPath(path))
+		parentDir := dirData{
+			Name: "..",
+			URL: joinURL(baseURL.Path, parentPath(path)),
+		}
+		data.Dirs = append(data.Dirs, parentDir)
+	}
+	uniqDirs := make(map[string]bool)
+
+	blobURL, err := router.Get("blob").URLPath("repo", repoName, "ref", refName)
+	if err != nil {
+		return err
 	}
 
-	blobRoute := router.Get("blob")
-	tree.Files().ForEach(func(f *object.File) error {
+	err = tree.Files().ForEach(func(f *object.File) error {
 		if strings.Index(f.Name, "/") > 0 {
 			components := strings.Split(f.Name, "/")
 			folderName := components[0]
-			data.Dirs[folderName] = joinURL(baseURL.Path, path, folderName)
-		} else {
-			blobURL, err := blobRoute.URLPath("repo", repoName, "hash", f.Hash.String())
-			if err != nil {
-				return err
+			_, ok := uniqDirs[folderName]
+			if ok {
+				return nil
 			}
-			data.Files[f.Name] = joinURL(blobURL.Path, path, f.Name)
+			uniqDirs[folderName] = true
+			dir := dirData{
+				Name: folderName,
+				URL: joinURL(baseURL.Path, path, folderName),
+			}
+			data.Dirs = append(data.Dirs, dir)
+		} else {
+			file := fileData{
+				Name: f.Name,
+				URL: joinURL(blobURL.Path, path, f.Name),
+			}
+			data.Files = append(data.Files, file)
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
 	template, err := env.Template.GetTemplate("git-list.html")
 	if err != nil {

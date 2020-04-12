@@ -2,14 +2,11 @@
 
 {{ define "content" }}
   <ul>
-    {{ if .ParentPath -}}
-      <li><a href="{{ .ParentPath }}">..</a></li>
-    {{ end -}}
-    {{ range $key, $value := .Dirs }}
-    <li><a href="{{ $value }}">{{ $key }}</a></li>
+    {{ range .Dirs }}
+    <li><a href="{{ .URL }}">{{ .Name }}</a></li>
     {{- end }}
-    {{ range $key, $value :=  .Files }}
-    <li><a href="{{ $value }}">{{ $key }}</a></li>
+    {{ range .Files }}
+    <li><a href="{{ .URL }}">{{ .Name }}</a></li>
     {{- end }}
   </ul>
 {{ end }}
