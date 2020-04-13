@@ -15,7 +15,10 @@ clean:
 static/output.css: css/styles.css css/content.css
 	npx postcss css/styles.css -o static/output.css
 
-all: git47 static/output.css
+static/favicon.ico: css/favicon.ico
+	cp css/favicon.ico static/
+
+all: git47 static/output.css static/favicon.ico
 
 dev:
 	modd
