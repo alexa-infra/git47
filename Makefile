@@ -1,5 +1,7 @@
 
-ROOT_DIR := $(shell pwd)
+FA_DIR := node_modules/@fortawesome/fontawesome-free/webfonts
+FA_FONTS_SOURCE := $(wildcard $(FA_DIR)/*.ttf) $(wildcard $(FA_DIR)/*.woff) $(wildcard $(FA_DIR)/*.eot)
+FA_FONTS_TARGET := $(patsubst $(FA_DIR)/%, static/webfonts/%, $(FA_FONTS_SOURCE))
 
 git47: *.go
 	go build
@@ -12,13 +14,23 @@ clean:
 	rm git47
 	rm -r static
 
-static/output.css: css/styles.css css/content.css
-	npx postcss css/styles.css -o static/output.css
+static/css/styles.css: css/styles.css css/content.css
+	npx postcss css/styles.css -o $@
+
+static/css/fontawesome.css: css/fontawesome.css
+	npx postcss $< -o $@
 
 static/favicon.ico: css/favicon.ico
-	cp css/favicon.ico static/
+	@test -d static || mkdir static
+	cp $< $@
 
-all: git47 static/output.css static/favicon.ico
+static/webfonts/%: $(FA_DIR)/%
+	@test -d static/webfonts || mkdir -p static/webfonts
+	cp $< $@
+
+static: static/css/styles.css static/css/fontawesome.css static/favicon.ico $(FA_FONTS_TARGET)
+
+all: git47 static
 
 dev:
 	modd

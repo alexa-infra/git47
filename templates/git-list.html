@@ -3,10 +3,10 @@
 {{ define "content" }}
   <ul>
     {{ range .Dirs }}
-    <li><a href="{{ .URL }}">{{ .Name }}</a></li>
+    <li><i class="far fa-folder"></i> <a href="{{ .URL }}">{{ .Name }}</a></li>
     {{- end }}
     {{ range .Files }}
-    <li><a href="{{ .URL }}">{{ .Name }}</a></li>
+    <li><i class="far fa-file"></i> <a href="{{ .URL }}">{{ .Name }}</a></li>
     {{- end }}
   </ul>
 {{ end }}
