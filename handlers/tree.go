@@ -1,44 +1,67 @@
 package handlers
 
 import (
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
 )
 
-type dirData struct {
-	Name string
-	URL  string
-}
-
 type fileData struct {
-	Name string
-	URL  string
+	Name   string
+	URL    string
+	Kind   string
+	Commit *commitData
 }
 
 type treeViewData struct {
-	Files []fileData
-	Dirs  []dirData
+	Files []*fileData
+	Dirs  []*fileData
+	*RepoConfig
+	*NamedReference
+}
+
+func getFileLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*object.Commit, error) {
+	path := joinPath(paths...)
+	filterFile := func(p string) bool {
+		return p == path
+	}
+	cIter, err := g.Log(&git.LogOptions{From: ref.Hash, PathFilter: filterFile})
+	if err != nil {
+		return nil, err
+	}
+	return cIter.Next()
+}
+
+func getFolderLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*object.Commit, error) {
+	path := joinPath(paths...)
+	filterFolder := func(p string) bool {
+		return strings.HasPrefix(p, path)
+	}
+	cIter, err := g.Log(&git.LogOptions{From: ref.Hash, PathFilter: filterFolder})
+	if err != nil {
+		return nil, err
+	}
+	return cIter.Next()
 }
 
 func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
-	g, err := getRepo(env, r)
+	rc, err := env.getRepoConfig(r)
 	if err != nil {
 		return StatusError{http.StatusNotFound, err}
 	}
 
-	router := env.Router
-	vars := mux.Vars(r)
-	repoName := vars["repo"]
-	refName := vars["ref"]
-
-	ref, err := getRef(r, g)
+	g, err := rc.open()
 	if err != nil {
 		return StatusError{http.StatusNotFound, err}
 	}
 
-	commit, err := g.CommitObject(ref)
+	ref, err := getNamedRef(g, r)
+	if err != nil {
+		return StatusError{http.StatusNotFound, err}
+	}
+
+	commit, err := g.CommitObject(ref.Hash)
 	if err != nil {
 		return err
 	}
@@ -48,12 +71,8 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	baseURL, err := router.Get("tree").URLPath("repo", repoName, "ref", refName)
-	if err != nil {
-		return err
-	}
-
-	path := r.URL.Path[len(baseURL.Path):]
+	baseURL := env.getTreeURL(rc, ref)
+	path := r.URL.Path[len(baseURL):]
 	path = strings.Trim(path, "/")
 
 	if path != "" {
@@ -63,20 +82,15 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	var data treeViewData
+	data := treeViewData{RepoConfig: rc, NamedReference: ref}
 	if path != "" {
-		parentDir := dirData{
+		data.Dirs = append(data.Dirs, &fileData{
 			Name: "..",
-			URL:  joinURL(baseURL.Path, parentPath(path)),
-		}
-		data.Dirs = append(data.Dirs, parentDir)
+			Kind: "Folder",
+			URL:  env.getTreeURL(rc, ref, parentPath(path)),
+		})
 	}
 	uniqDirs := make(map[string]bool)
-
-	blobURL, err := router.Get("blob").URLPath("repo", repoName, "ref", refName)
-	if err != nil {
-		return err
-	}
 
 	err = tree.Files().ForEach(func(f *object.File) error {
 		if strings.Index(f.Name, "/") > 0 {
@@ -86,18 +100,32 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 			if ok {
 				return nil
 			}
+			lastCommit, err := getFolderLastCommit(g, commit, path, folderName)
+			if err != nil {
+				return err
+			}
+			cd := newCommitData(lastCommit)
+			cd.URL = env.getCommitURL(rc, lastCommit)
 			uniqDirs[folderName] = true
-			dir := dirData{
+			data.Dirs = append(data.Dirs, &fileData{
 				Name: folderName,
-				URL:  joinURL(baseURL.Path, path, folderName),
-			}
-			data.Dirs = append(data.Dirs, dir)
+				URL:  env.getTreeURL(rc, ref, path, folderName),
+				Commit: cd,
+				Kind: "Folder",
+			})
 		} else {
-			file := fileData{
-				Name: f.Name,
-				URL:  joinURL(blobURL.Path, path, f.Name),
+			lastCommit, err := getFileLastCommit(g, commit, path, f.Name)
+			if err != nil {
+				return err
 			}
-			data.Files = append(data.Files, file)
+			cd := newCommitData(lastCommit)
+			cd.URL = env.getCommitURL(rc, lastCommit)
+			data.Files = append(data.Files, &fileData{
+				Name: f.Name,
+				URL:  env.getBlobURL(rc, ref, path, f.Name),
+				Commit: cd,
+				Kind: "File",
+			})
 		}
 		return nil
 	})

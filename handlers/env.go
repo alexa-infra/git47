@@ -47,13 +47,36 @@ func (env *Env) getRepoConfig(r *http.Request) (*RepoConfig, error) {
 }
 
 func (env *Env) getCommitURL(rc *RepoConfig, c *object.Commit) string {
-	router := env.Router
-	commitRoute := router.Get("commit")
+	route := env.Router.Get("commit")
 	repoName := rc.Name
 
-	url, err := commitRoute.URLPath("repo", repoName, "hash", c.Hash.String())
+	url, err := route.URLPath("repo", repoName, "hash", c.Hash.String())
 	if err != nil {
 		return ""
 	}
 	return url.Path
+}
+
+func (env *Env) getTreeURL(rc *RepoConfig, ref *NamedReference, path ...string) string {
+	route := env.Router.Get("tree")
+	repoName := rc.Name
+	refName := ref.Name
+
+	url, err := route.URLPath("repo", repoName, "ref", refName)
+	if err != nil {
+		return ""
+	}
+	return joinURL(url.Path, path...)
+}
+
+func (env *Env) getBlobURL(rc *RepoConfig, ref *NamedReference, path ...string) string {
+	route := env.Router.Get("blob")
+	repoName := rc.Name
+	refName := ref.Name
+
+	url, err := route.URLPath("repo", repoName, "ref", refName)
+	if err != nil {
+		return ""
+	}
+	return joinURL(url.Path, path...)
 }

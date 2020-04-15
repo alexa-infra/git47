@@ -3,14 +3,33 @@ package handlers
 import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type commitData struct {
 	Hash    string
 	Message string
 	URL     string
+	When    time.Time
+}
+
+func (c *commitData) ShortHash() string {
+	return c.Hash[:7]
+}
+
+func (c *commitData) Date() string {
+	return c.When.Format("2006-01-02")
+}
+
+func newCommitData(commit *object.Commit) *commitData {
+	return &commitData{
+		Message: strings.Trim(commit.Message, "\n"),
+		Hash:    commit.Hash.String(),
+		When:    commit.Author.When,
+	}
 }
 
 type commitsViewData struct {
@@ -65,11 +84,9 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 			}
 			nextRef = plumbing.ZeroHash
 		}
-		data.Commits = append(data.Commits, &commitData{
-			Message: strings.Trim(c.Message, "\n"),
-			Hash:    c.Hash.String(),
-			URL:     env.getCommitURL(rc, c),
-		})
+		cd := newCommitData(c)
+		cd.URL = env.getCommitURL(rc, c)
+		data.Commits = append(data.Commits, cd)
 		if len(data.Commits) >= 20 {
 			break
 		}

@@ -60,6 +60,40 @@ func getRepo(env *Env, r *http.Request) (*git.Repository, error) {
 	return g, err
 }
 
+type NamedReference struct {
+	Name string
+	Kind string
+	Hash plumbing.Hash
+}
+
+func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
+	vars := mux.Vars(r)
+	ref := vars["ref"]
+
+	if ref == "" {
+		return nil, errRefNotFound
+	}
+
+	branch, err := g.Reference(plumbing.NewBranchReferenceName(ref), false)
+	if err == nil {
+		return &NamedReference{Name: ref, Kind: "branch", Hash: branch.Hash()}, nil
+	}
+	tag, err := g.Reference(plumbing.NewTagReferenceName(ref), false)
+	if err == nil {
+		return &NamedReference{Name: ref, Kind: "tag", Hash: tag.Hash()}, nil
+	}
+
+	hash := plumbing.NewHash(ref)
+	if !hash.IsZero() {
+		_, err := g.CommitObject(hash)
+		if err == nil {
+			return &NamedReference{Name: ref, Kind: "commit", Hash: hash}, nil
+		}
+	}
+
+	return nil, errRefNotFound
+}
+
 func getRef(r *http.Request, g *git.Repository) (plumbing.Hash, error) {
 	vars := mux.Vars(r)
 	ref := vars["ref"]
@@ -101,4 +135,8 @@ func joinURL(base string, paths ...string) string {
 		return strings.TrimRight(base, "/")
 	}
 	return fmt.Sprintf("%s/%s", strings.TrimRight(base, "/"), strings.TrimLeft(p, "/"))
+}
+
+func joinPath(paths ...string) string {
+	return path.Join(paths...)
 }

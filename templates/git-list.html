@@ -1,12 +1,41 @@
 {{ define "title" }}Git list{{ end }}
 
+{{ define "item-icon" -}}
+  {{ if eq . "Folder" -}}
+    fa-folder
+  {{- end }}
+
+  {{ if eq . "File" -}}
+    fa-file
+  {{- end }}
+{{- end }}
+
+{{ define "item-row" }}
+  <li class="flex items-center">
+    <div class="w-6 text-center">
+      <i class="far {{ template "item-icon" .Kind }}"></i>
+    </div>
+    <div class="w-48 truncate">
+      <a href="{{ .URL }}">{{ .Name }}</a>
+    </div>
+    {{ with .Commit }}
+    <div class="flex-1 truncate">
+      <a class="text-xs text-gray-600" href="{{ .URL }}">{{ .Message }}</a>
+    </div>
+    <div class="w-24 text-center text-xs text-gray-600">
+      <span>{{ .Date }}</span>
+    </div>
+    {{ end }}
+  </li>
+{{ end }}
+
 {{ define "content" }}
   <ul>
     {{ range .Dirs }}
-    <li><i class="far fa-folder"></i> <a href="{{ .URL }}">{{ .Name }}</a></li>
+      {{ template "item-row" . }}
     {{- end }}
     {{ range .Files }}
-    <li><i class="far fa-file"></i> <a href="{{ .URL }}">{{ .Name }}</a></li>
+      {{ template "item-row" . }}
     {{- end }}
   </ul>
 {{ end }}
