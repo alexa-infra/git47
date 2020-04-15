@@ -101,6 +101,7 @@ func makeTestEnv(t *testing.T) *Env {
 		},
 		Repositories: RepoMap{
 			"memory": &RepoConfig{
+				Name:     "memory",
 				InMemory: repo,
 			},
 		},

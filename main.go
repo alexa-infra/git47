@@ -25,9 +25,11 @@ func main() {
 		},
 		Repositories: RepoMap{
 			"friday": &RepoConfig{
+				Name: "friday",
 				Path: "/home/alexey/projects/friday/.git",
 			},
 			"git47": &RepoConfig{
+				Name: "git47",
 				Path: "/home/alexey/projects/go-playground/git47/.git",
 			},
 		},

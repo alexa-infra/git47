@@ -3,23 +3,28 @@ package handlers
 import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
 )
 
 type commitData struct {
-	URL     string
 	Hash    string
 	Message string
+	URL     string
 }
 
 type commitsViewData struct {
-	Commits []commitData
+	Commits []*commitData
+	*RepoConfig
 }
 
 func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
-	g, err := getRepo(env, r)
+	rc, err := env.getRepoConfig(r)
+	if err != nil {
+		return StatusError{http.StatusNotFound, err}
+	}
+
+	g, err := rc.open()
 	if err != nil {
 		return StatusError{http.StatusNotFound, err}
 	}
@@ -46,12 +51,7 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	router := env.Router
-	commitRoute := router.Get("commit")
-	vars := mux.Vars(r)
-	repoName := vars["repo"]
-
-	var data commitsViewData
+	data := commitsViewData{RepoConfig: rc}
 
 	// ... just iterates over the commits
 	for i := 0; i < 20; i++ {
@@ -65,14 +65,10 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 			}
 			nextRef = plumbing.ZeroHash
 		}
-		commitURL, err := commitRoute.URLPath("repo", repoName, "hash", c.Hash.String())
-		if err != nil {
-			break
-		}
-		data.Commits = append(data.Commits, commitData{
-			URL:     commitURL.Path,
+		data.Commits = append(data.Commits, &commitData{
 			Message: strings.Trim(c.Message, "\n"),
 			Hash:    c.Hash.String(),
+			URL:     env.getCommitURL(rc, c),
 		})
 		if len(data.Commits) >= 20 {
 			break
