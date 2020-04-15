@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gorilla/mux"
 	"net/http"
 	"path"
@@ -43,27 +44,14 @@ var (
 	errInvalidHash  = errors.New("Invalid hash")
 )
 
-func getRepo(env *Env, r *http.Request) (*git.Repository, error) {
-	vars := mux.Vars(r)
-	repo := vars["repo"]
-	cfg, ok := env.Repositories[repo]
-
-	if !ok {
-		return nil, errRepoNotFound
-	}
-
-	if cfg.InMemory != nil {
-		return cfg.InMemory, nil
-	}
-
-	g, err := git.PlainOpen(cfg.Path)
-	return g, err
+type NamedReference struct {
+	Name   string
+	Kind   string
+	Commit *object.Commit
 }
 
-type NamedReference struct {
-	Name string
-	Kind string
-	Hash plumbing.Hash
+func (ref *NamedReference) Hash() plumbing.Hash {
+	return ref.Commit.Hash
 }
 
 func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
@@ -76,50 +64,48 @@ func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
 
 	branch, err := g.Reference(plumbing.NewBranchReferenceName(ref), false)
 	if err == nil {
-		return &NamedReference{Name: ref, Kind: "branch", Hash: branch.Hash()}, nil
+		hash := branch.Hash()
+
+		commit, err := g.CommitObject(hash)
+		if err != nil {
+			return nil, err
+		}
+
+		return &NamedReference{
+			Name:   ref,
+			Kind:   "branch",
+			Commit: commit,
+		}, nil
 	}
 	tag, err := g.Reference(plumbing.NewTagReferenceName(ref), false)
 	if err == nil {
-		return &NamedReference{Name: ref, Kind: "tag", Hash: tag.Hash()}, nil
+		hash := tag.Hash()
+
+		commit, err := g.CommitObject(hash)
+		if err != nil {
+			return nil, err
+		}
+
+		return &NamedReference{
+			Name:   ref,
+			Kind:   "tag",
+			Commit: commit,
+		}, nil
 	}
 
 	hash := plumbing.NewHash(ref)
 	if !hash.IsZero() {
-		_, err := g.CommitObject(hash)
+		commit, err := g.CommitObject(hash)
 		if err == nil {
-			return &NamedReference{Name: ref, Kind: "commit", Hash: hash}, nil
+			return &NamedReference{
+				Name:   ref,
+				Kind:   "commit",
+				Commit: commit,
+			}, nil
 		}
 	}
 
 	return nil, errRefNotFound
-}
-
-func getRef(r *http.Request, g *git.Repository) (plumbing.Hash, error) {
-	vars := mux.Vars(r)
-	ref := vars["ref"]
-
-	if ref == "" {
-		return plumbing.ZeroHash, errRefNotFound
-	}
-
-	branch, err := g.Reference(plumbing.NewBranchReferenceName(ref), false)
-	if err == nil {
-		return branch.Hash(), nil
-	}
-	tag, err := g.Reference(plumbing.NewTagReferenceName(ref), false)
-	if err == nil {
-		return tag.Hash(), nil
-	}
-
-	hash := plumbing.NewHash(ref)
-	if !hash.IsZero() {
-		_, err := g.CommitObject(hash)
-		if err == nil {
-			return hash, nil
-		}
-	}
-
-	return plumbing.ZeroHash, errRefNotFound
 }
 
 func parentPath(path string) string {

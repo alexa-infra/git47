@@ -22,9 +22,9 @@ func TestGetRef(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/r/memory/tree/master", nil)
 		req = mux.SetURLVars(req, map[string]string{"ref": refName})
 
-		hash, err := getRef(req, r)
+		ref, err := getNamedRef(r, req)
 		if assert.Nil(t, err) {
-			assert.Equal(t, refHash, hash.String(), fmt.Sprintf("Invalid hash for ref %s", refName))
+			assert.Equal(t, refHash, ref.Hash().String(), fmt.Sprintf("Invalid hash for ref %s", refName))
 		}
 	}
 }

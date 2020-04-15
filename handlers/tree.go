@@ -61,11 +61,7 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return StatusError{http.StatusNotFound, err}
 	}
 
-	commit, err := g.CommitObject(ref.Hash)
-	if err != nil {
-		return err
-	}
-
+	commit := ref.Commit
 	tree, err := commit.Tree()
 	if err != nil {
 		return err
@@ -75,23 +71,22 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 	path := r.URL.Path[len(baseURL):]
 	path = strings.Trim(path, "/")
 
+	data := treeViewData{RepoConfig: rc, NamedReference: ref}
+
 	if path != "" {
 		tree, err = tree.Tree(path)
 		if err != nil {
 			return StatusError{http.StatusNotFound, err}
 		}
-	}
 
-	data := treeViewData{RepoConfig: rc, NamedReference: ref}
-	if path != "" {
 		data.Dirs = append(data.Dirs, &fileData{
 			Name: "..",
 			Kind: "Folder",
 			URL:  env.getTreeURL(rc, ref, parentPath(path)),
 		})
 	}
-	uniqDirs := make(map[string]bool)
 
+	uniqDirs := make(map[string]bool)
 	err = tree.Files().ForEach(func(f *object.File) error {
 		if strings.Index(f.Name, "/") > 0 {
 			components := strings.Split(f.Name, "/")
@@ -100,18 +95,19 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 			if ok {
 				return nil
 			}
+			uniqDirs[folderName] = true
+
 			lastCommit, err := getFolderLastCommit(g, commit, path, folderName)
 			if err != nil {
 				return err
 			}
 			cd := newCommitData(lastCommit)
 			cd.URL = env.getCommitURL(rc, lastCommit)
-			uniqDirs[folderName] = true
 			data.Dirs = append(data.Dirs, &fileData{
-				Name: folderName,
-				URL:  env.getTreeURL(rc, ref, path, folderName),
+				Name:   folderName,
+				URL:    env.getTreeURL(rc, ref, path, folderName),
 				Commit: cd,
-				Kind: "Folder",
+				Kind:   "Folder",
 			})
 		} else {
 			lastCommit, err := getFileLastCommit(g, commit, path, f.Name)
@@ -121,10 +117,10 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 			cd := newCommitData(lastCommit)
 			cd.URL = env.getCommitURL(rc, lastCommit)
 			data.Files = append(data.Files, &fileData{
-				Name: f.Name,
-				URL:  env.getBlobURL(rc, ref, path, f.Name),
+				Name:   f.Name,
+				URL:    env.getBlobURL(rc, ref, path, f.Name),
 				Commit: cd,
-				Kind: "File",
+				Kind:   "File",
 			})
 		}
 		return nil

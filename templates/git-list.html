@@ -30,6 +30,7 @@
 {{ end }}
 
 {{ define "content" }}
+  <h1>{{ .RepoConfig.Name }}</h1>
   <ul>
     {{ range .Dirs }}
       {{ template "item-row" . }}

@@ -35,6 +35,7 @@ func newCommitData(commit *object.Commit) *commitData {
 type commitsViewData struct {
 	Commits []*commitData
 	*RepoConfig
+	*NamedReference
 }
 
 func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
@@ -48,7 +49,7 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return StatusError{http.StatusNotFound, err}
 	}
 
-	ref, err := getRef(r, g)
+	ref, err := getNamedRef(g, r)
 	if err != nil {
 		return StatusError{http.StatusNotFound, err}
 	}
@@ -65,12 +66,12 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// ... retrieves the commit history
-	cIter, err := g.Log(&git.LogOptions{From: ref})
+	cIter, err := g.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
 		return err
 	}
 
-	data := commitsViewData{RepoConfig: rc}
+	data := commitsViewData{RepoConfig: rc, NamedReference: ref}
 
 	// ... just iterates over the commits
 	for i := 0; i < 20; i++ {

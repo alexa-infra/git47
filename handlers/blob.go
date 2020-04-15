@@ -1,44 +1,35 @@
 package handlers
 
 import (
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
 func gitBlob(env *Env, w http.ResponseWriter, r *http.Request) error {
-	g, err := getRepo(env, r)
+	rc, err := env.getRepoConfig(r)
 	if err != nil {
 		return StatusError{http.StatusNotFound, err}
 	}
 
-	router := env.Router
-	vars := mux.Vars(r)
-	repoName := vars["repo"]
-	refName := vars["ref"]
-
-	ref, err := getRef(r, g)
+	g, err := rc.open()
 	if err != nil {
 		return StatusError{http.StatusNotFound, err}
 	}
 
-	commit, err := g.CommitObject(ref)
+	ref, err := getNamedRef(g, r)
 	if err != nil {
-		return err
+		return StatusError{http.StatusNotFound, err}
 	}
 
+	commit := ref.Commit
 	tree, err := commit.Tree()
 	if err != nil {
 		return err
 	}
 
-	baseURL, err := router.Get("tree").URLPath("repo", repoName, "ref", refName)
-	if err != nil {
-		return err
-	}
-
-	path := r.URL.Path[len(baseURL.Path):]
+	baseURL := env.getBlobURL(rc, ref)
+	path := r.URL.Path[len(baseURL):]
 	path = strings.Trim(path, "/")
 
 	if path == "" {

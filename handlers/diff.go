@@ -7,7 +7,12 @@ import (
 )
 
 func gitDiff(env *Env, w http.ResponseWriter, r *http.Request) error {
-	g, err := getRepo(env, r)
+	rc, err := env.getRepoConfig(r)
+	if err != nil {
+		return StatusError{http.StatusNotFound, err}
+	}
+
+	g, err := rc.open()
 	if err != nil {
 		return StatusError{http.StatusNotFound, err}
 	}
