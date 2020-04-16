@@ -21,28 +21,42 @@ type treeViewData struct {
 	*NamedReference
 }
 
-func getFileLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*object.Commit, error) {
+func getLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*object.Commit, error) {
 	path := joinPath(paths...)
-	filterFile := func(p string) bool {
-		return p == path
-	}
-	cIter, err := g.Log(&git.LogOptions{From: ref.Hash, PathFilter: filterFile})
+	cIter, err := g.Log(&git.LogOptions{From: ref.Hash})
 	if err != nil {
 		return nil, err
 	}
-	return cIter.Next()
-}
+	defer cIter.Close()
 
-func getFolderLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*object.Commit, error) {
-	path := joinPath(paths...)
-	filterFolder := func(p string) bool {
-		return strings.HasPrefix(p, path)
+	var treeEntry *object.TreeEntry = nil
+	var lastCommit *object.Commit = nil
+	for {
+		commit, err := cIter.Next()
+		if err != nil {
+			if lastCommit != nil {
+				return lastCommit, nil
+			}
+			return nil, err
+		}
+		tree, err := commit.Tree()
+		if err != nil {
+			return nil, err
+		}
+		entry, err := tree.FindEntry(path)
+		if err != nil {
+			if lastCommit != nil {
+				return lastCommit, nil
+			}
+			return nil, err
+		}
+		if treeEntry == nil {
+			treeEntry = entry
+		} else if *treeEntry != *entry {
+			return lastCommit, nil
+		}
+		lastCommit = commit
 	}
-	cIter, err := g.Log(&git.LogOptions{From: ref.Hash, PathFilter: filterFolder})
-	if err != nil {
-		return nil, err
-	}
-	return cIter.Next()
 }
 
 func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
@@ -97,7 +111,7 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 			}
 			uniqDirs[folderName] = true
 
-			lastCommit, err := getFolderLastCommit(g, commit, path, folderName)
+			lastCommit, err := getLastCommit(g, commit, path, folderName)
 			if err != nil {
 				return err
 			}
@@ -110,7 +124,7 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 				Kind:   "Folder",
 			})
 		} else {
-			lastCommit, err := getFileLastCommit(g, commit, path, f.Name)
+			lastCommit, err := getLastCommit(g, commit, path, f.Name)
 			if err != nil {
 				return err
 			}
