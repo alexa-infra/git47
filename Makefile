@@ -1,6 +1,6 @@
 
 FA_DIR := node_modules/@fortawesome/fontawesome-free/webfonts
-FA_FONTS_SOURCE := $(wildcard $(FA_DIR)/*.ttf) $(wildcard $(FA_DIR)/*.woff) $(wildcard $(FA_DIR)/*.eot)
+FA_FONTS_SOURCE := $(wildcard $(FA_DIR)/*.ttf) $(wildcard $(FA_DIR)/*.woff) $(wildcard $(FA_DIR)/*.woff2) $(wildcard $(FA_DIR)/*.eot)
 FA_FONTS_TARGET := $(patsubst $(FA_DIR)/%, static/webfonts/%, $(FA_FONTS_SOURCE))
 
 git47: *.go
