@@ -19,6 +19,7 @@ type treeViewData struct {
 	Dirs  []*fileData
 	*RepoConfig
 	*NamedReference
+	Path  string
 }
 
 func getLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*object.Commit, error) {
@@ -85,7 +86,7 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 	path := r.URL.Path[len(baseURL):]
 	path = strings.Trim(path, "/")
 
-	data := treeViewData{RepoConfig: rc, NamedReference: ref}
+	data := treeViewData{RepoConfig: rc, NamedReference: ref, Path: path}
 
 	if path != "" {
 		tree, err = tree.Tree(path)

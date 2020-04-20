@@ -30,7 +30,11 @@
 {{ end }}
 
 {{ define "content" }}
-  <h1>{{ .RepoConfig.Name }}</h1>
+  <h1 class="mt-3">Repository: {{ .RepoConfig.Name }}</h1>
+  {{ with .NamedReference }}
+  <h2 class="">{{ .Kind }}: {{ .Name }}</h2>
+  {{ end }}
+  <h2 class="mb-3">Path: {{ .Path }}</h2>
   <ul>
     {{ range .Dirs }}
       {{ template "item-row" . }}
