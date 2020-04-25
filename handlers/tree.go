@@ -15,11 +15,12 @@ type fileData struct {
 }
 
 type treeViewData struct {
-	Files []*fileData
-	Dirs  []*fileData
+	Files      []*fileData
+	Dirs       []*fileData
+	Path       string
+	LastCommit *commitData
 	*RepoConfig
 	*NamedReference
-	Path  string
 }
 
 func getLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*object.Commit, error) {
@@ -99,6 +100,17 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 			Kind: "Folder",
 			URL:  env.getTreeURL(rc, ref, parentPath(path)),
 		})
+		lastCommit, err := getLastCommit(g, commit, path)
+		if err != nil {
+			return err
+		}
+		cd := newCommitData(lastCommit)
+		cd.URL = env.getCommitURL(rc, lastCommit)
+		data.LastCommit = cd
+	} else {
+		cd := newCommitData(commit)
+		cd.URL = env.getCommitURL(rc, commit)
+		data.LastCommit = cd
 	}
 
 	uniqDirs := make(map[string]bool)

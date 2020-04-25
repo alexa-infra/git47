@@ -30,11 +30,16 @@
 {{ end }}
 
 {{ define "content" }}
-  <h1 class="mt-3">Repository: {{ .RepoConfig.Name }}</h1>
-  {{ with .NamedReference }}
-  <h2 class="">{{ .Kind }}: {{ .Name }}</h2>
-  {{ end }}
-  <h2 class="mb-3">Path: {{ .Path }}</h2>
+  <div class="my-3">
+    <h1>Repository: {{ .RepoConfig.Name }}</h1>
+    {{ with .NamedReference }}
+    <h2>{{ .Kind }}: {{ .Name }}</h2>
+    {{ end }}
+    <h2>Path: {{ .Path }}</h2>
+    {{ with .LastCommit }}
+    <h2>Lastest commit: <a href="{{ .URL }}">{{ .Message }}</a> on {{ .Date }}
+    {{ end }}
+  </div>
   <ul>
     {{ range .Dirs }}
       {{ template "item-row" . }}
