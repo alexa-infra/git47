@@ -156,7 +156,7 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	template, err := env.Template.GetTemplate("git-list.html")
+	template, err := env.Template.GetTemplate("git-tree.html")
 	if err != nil {
 		return err
 	}
