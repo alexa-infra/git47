@@ -24,10 +24,11 @@ func (c *commitData) Date() string {
 	return c.When.Format("2006-01-02")
 }
 
-func newCommitData(commit *object.Commit) *commitData {
+func newCommitData(env *Env, rc *RepoConfig, commit *object.Commit) *commitData {
 	return &commitData{
 		Message: strings.Trim(commit.Message, "\n"),
 		Hash:    commit.Hash.String(),
+		URL:     env.getCommitURL(rc, commit),
 		When:    commit.Author.When,
 	}
 }
@@ -85,8 +86,7 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 			}
 			nextRef = plumbing.ZeroHash
 		}
-		cd := newCommitData(c)
-		cd.URL = env.getCommitURL(rc, c)
+		cd := newCommitData(env, rc, c)
 		data.Commits = append(data.Commits, cd)
 		if len(data.Commits) >= 20 {
 			break

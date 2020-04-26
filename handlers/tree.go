@@ -104,13 +104,9 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			return err
 		}
-		cd := newCommitData(lastCommit)
-		cd.URL = env.getCommitURL(rc, lastCommit)
-		data.LastCommit = cd
+		data.LastCommit = newCommitData(env, rc, lastCommit)
 	} else {
-		cd := newCommitData(commit)
-		cd.URL = env.getCommitURL(rc, commit)
-		data.LastCommit = cd
+		data.LastCommit = newCommitData(env, rc, commit)
 	}
 
 	uniqDirs := make(map[string]bool)
@@ -128,8 +124,7 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 			if err != nil {
 				return err
 			}
-			cd := newCommitData(lastCommit)
-			cd.URL = env.getCommitURL(rc, lastCommit)
+			cd := newCommitData(env, rc, lastCommit)
 			data.Dirs = append(data.Dirs, &fileData{
 				Name:   folderName,
 				URL:    env.getTreeURL(rc, ref, path, folderName),
@@ -141,8 +136,7 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 			if err != nil {
 				return err
 			}
-			cd := newCommitData(lastCommit)
-			cd.URL = env.getCommitURL(rc, lastCommit)
+			cd := newCommitData(env, rc, lastCommit)
 			data.Files = append(data.Files, &fileData{
 				Name:   f.Name,
 				URL:    env.getBlobURL(rc, ref, path, f.Name),
