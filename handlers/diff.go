@@ -2,9 +2,23 @@ package handlers
 
 import (
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gorilla/mux"
 	"net/http"
 )
+
+type patchData struct {
+	FileName string
+	URL string
+	Content string
+}
+
+type diffViewData struct {
+	Commit *commitData
+	Parents []*commitData
+	TreeURL string
+	Stats object.FileStats
+}
 
 func gitDiff(env *Env, w http.ResponseWriter, r *http.Request) error {
 	rc, err := env.getRepoConfig(r)
@@ -35,10 +49,12 @@ func gitDiff(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	data := diffViewData{Commit: newCommitData(env, rc, commit), Stats: stats}
+
 	template, err := env.Template.GetTemplate("git-diff.html")
 	if err != nil {
 		return err
 	}
 
-	return template.ExecuteTemplate(w, "layout", stats)
+	return template.ExecuteTemplate(w, "layout", data)
 }
