@@ -25,6 +25,9 @@ func (c *commitData) Date() string {
 }
 
 func newCommitData(env *Env, rc *RepoConfig, commit *object.Commit) *commitData {
+	if commit == nil {
+		return nil
+	}
 	return &commitData{
 		Message: strings.Trim(commit.Message, "\n"),
 		Hash:    commit.Hash.String(),
@@ -34,7 +37,7 @@ func newCommitData(env *Env, rc *RepoConfig, commit *object.Commit) *commitData 
 }
 
 type commitsViewData struct {
-	Commits []*commitData
+	Commits []commitData
 	*RepoConfig
 	*NamedReference
 }
@@ -86,8 +89,7 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 			}
 			nextRef = plumbing.ZeroHash
 		}
-		cd := newCommitData(env, rc, c)
-		data.Commits = append(data.Commits, cd)
+		data.Commits = append(data.Commits, *newCommitData(env, rc, c))
 		if len(data.Commits) >= 20 {
 			break
 		}

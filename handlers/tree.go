@@ -15,8 +15,8 @@ type fileData struct {
 }
 
 type treeViewData struct {
-	Files      []*fileData
-	Dirs       []*fileData
+	Files      []fileData
+	Dirs       []fileData
 	Path       string
 	LastCommit *commitData
 	*RepoConfig
@@ -89,17 +89,32 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 
 	data := treeViewData{RepoConfig: rc, NamedReference: ref, Path: path}
 
+	newFileData := func (commit *object.Commit, name string) fileData {
+		return fileData{
+			Name:   name,
+			URL:    env.getBlobURL(rc, ref, path, name),
+			Commit: newCommitData(env, rc, commit),
+			Kind:   "File",
+		}
+	}
+
+	newFolderData := func (commit *object.Commit, name string) fileData {
+		return fileData{
+			Name:   name,
+			URL:    env.getTreeURL(rc, ref, path, name),
+			Commit: newCommitData(env, rc, commit),
+			Kind:   "Folder",
+		}
+	}
+
 	if path != "" {
 		tree, err = tree.Tree(path)
 		if err != nil {
 			return StatusError{http.StatusNotFound, err}
 		}
 
-		data.Dirs = append(data.Dirs, &fileData{
-			Name: "..",
-			Kind: "Folder",
-			URL:  env.getTreeURL(rc, ref, parentPath(path)),
-		})
+		data.Dirs = append(data.Dirs, newFolderData(nil, ".."))
+
 		lastCommit, err := getLastCommit(g, commit, path)
 		if err != nil {
 			return err
@@ -124,25 +139,13 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 			if err != nil {
 				return err
 			}
-			cd := newCommitData(env, rc, lastCommit)
-			data.Dirs = append(data.Dirs, &fileData{
-				Name:   folderName,
-				URL:    env.getTreeURL(rc, ref, path, folderName),
-				Commit: cd,
-				Kind:   "Folder",
-			})
+			data.Dirs = append(data.Dirs, newFolderData(lastCommit, folderName))
 		} else {
 			lastCommit, err := getLastCommit(g, commit, path, f.Name)
 			if err != nil {
 				return err
 			}
-			cd := newCommitData(env, rc, lastCommit)
-			data.Files = append(data.Files, &fileData{
-				Name:   f.Name,
-				URL:    env.getBlobURL(rc, ref, path, f.Name),
-				Commit: cd,
-				Kind:   "File",
-			})
+			data.Files = append(data.Files, newFileData(lastCommit, f.Name))
 		}
 		return nil
 	})
