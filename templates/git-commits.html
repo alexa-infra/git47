@@ -1,10 +1,11 @@
 {{ define "title" }}Git commits{{ end }}
 
 {{ define "content" }}
+  {{ template "repo-brand" .Context }}
   <ul>
     {{ range .Commits }}
     <li>
-      <a href="{{ .URL }}">{{ .Message }} ({{ .Hash }})</a>
+      <a href="{{ .URL }}">{{ .Message }} ({{ .ShortHash }})</a>
     </li>
     {{- end }}
   </ul>

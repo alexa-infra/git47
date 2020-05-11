@@ -2,12 +2,7 @@
 
 {{ define "content" }}
   <div class="my-3">
-    <h1>
-      <a href="{{ .Context.GetSummaryURL }}">{{ .Context.Config.Name }}</a>
-      {{ with .Context.Ref }}
-      <span class="inline-block rounded bg-indigo-800 text-indigo-100 uppercase px-2 text-xs font-semibold font-sans tracking-wide" title="{{ .Kind }}">{{ .Name }}</span>
-      {{ end }}
-    </h1>
+    {{ template "repo-brand" .Context }}
     <div class="flex">
       <a class="flex-auto text-center" href="{{ .Context.GetTreeURL }}"><i class="far fa-file-alt"></i> {{ .NumFiles }} Files</a>
       <a class="flex-auto text-center" href="{{ .Context.GetLogURL }}"><i class="far fa-check-square"></i> {{ .NumCommits }} Commits</a>

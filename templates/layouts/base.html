@@ -16,3 +16,12 @@
   </body>
 </html>
 {{- end }}
+
+{{ define "repo-brand" }}
+  <h1>
+    <a href="{{ .GetSummaryURL }}">{{ .Config.Name }}</a>
+    {{ with .Ref }}
+    <span class="inline-block rounded bg-indigo-800 text-indigo-100 uppercase px-2 text-xs font-semibold font-sans tracking-wide" title="{{ .Kind }}">{{ .Name }}</span>
+    {{ end }}
+  </h1>
+{{ end }}

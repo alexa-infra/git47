@@ -20,8 +20,8 @@ func TestGitLog(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	if assert.Equal(t, rr.Code, http.StatusOK, rr.Body.String()) {
-		assert.Contains(t, rr.Body.String(), `<a href="/r/memory/commit/17a958a4b3f7f1aa265f782cf6e01e24cd4010cf">foo (17a958a4b3f7f1aa265f782cf6e01e24cd4010cf)</a>`)
-		assert.Contains(t, rr.Body.String(), `<a href="/r/memory/commit/60a58ae38710f264b2c00f77c82ae44419381a3f">foobar (60a58ae38710f264b2c00f77c82ae44419381a3f)</a>`)
+		assert.Contains(t, rr.Body.String(), `<a href="/r/memory/commit/17a958a4b3f7f1aa265f782cf6e01e24cd4010cf">foo (17a958a)</a>`)
+		assert.Contains(t, rr.Body.String(), `<a href="/r/memory/commit/60a58ae38710f264b2c00f77c82ae44419381a3f">foobar (60a58ae)</a>`)
 	}
 }
 
@@ -37,8 +37,8 @@ func TestGitLogNext(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	if assert.Equal(t, rr.Code, http.StatusOK, rr.Body.String()) {
-		assert.Contains(t, rr.Body.String(), `<a href="/r/memory/commit/17a958a4b3f7f1aa265f782cf6e01e24cd4010cf">foo (17a958a4b3f7f1aa265f782cf6e01e24cd4010cf)</a>`)
-		assert.NotContains(t, rr.Body.String(), `<a href="/r/memory/commit/60a58ae38710f264b2c00f77c82ae44419381a3f">foobar (60a58ae38710f264b2c00f77c82ae44419381a3f)</a>`)
+		assert.Contains(t, rr.Body.String(), `<a href="/r/memory/commit/17a958a4b3f7f1aa265f782cf6e01e24cd4010cf">foo (17a958a)</a>`)
+		assert.NotContains(t, rr.Body.String(), `<a href="/r/memory/commit/60a58ae38710f264b2c00f77c82ae44419381a3f">foobar (60a58ae)</a>`)
 	}
 }
 
