@@ -19,8 +19,7 @@ type treeViewData struct {
 	Dirs       []fileData
 	Path       string
 	LastCommit *commitData
-	*RepoConfig
-	*NamedReference
+	*Context
 }
 
 func getLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*object.Commit, error) {
@@ -61,48 +60,36 @@ func getLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*obj
 	}
 }
 
-func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
-	rc, err := env.getRepoConfig(r)
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
+func gitTree(ctx *Context) error {
+	g := ctx.repo
+	commit := ctx.Ref.Commit
+	r := ctx.request
 
-	g, err := rc.open()
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
-
-	ref, err := getNamedRef(g, r)
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
-
-	commit := ref.Commit
 	tree, err := commit.Tree()
 	if err != nil {
 		return err
 	}
 
-	baseURL := env.getTreeURL(rc, ref)
+	baseURL := ctx.GetTreeURL()
 	path := r.URL.Path[len(baseURL):]
 	path = strings.Trim(path, "/")
 
-	data := treeViewData{RepoConfig: rc, NamedReference: ref, Path: path}
+	data := treeViewData{Context: ctx}
 
-	newFileData := func (commit *object.Commit, name string) fileData {
+	newFileData := func(commit *object.Commit, name string) fileData {
 		return fileData{
 			Name:   name,
-			URL:    env.getBlobURL(rc, ref, path, name),
-			Commit: newCommitData(env, rc, commit),
+			URL:    ctx.GetBlobURL(path, name),
+			Commit: newCommitData(ctx, commit),
 			Kind:   "File",
 		}
 	}
 
-	newFolderData := func (commit *object.Commit, name string) fileData {
+	newFolderData := func(commit *object.Commit, name string) fileData {
 		return fileData{
 			Name:   name,
-			URL:    env.getTreeURL(rc, ref, path, name),
-			Commit: newCommitData(env, rc, commit),
+			URL:    ctx.GetTreeURL(path, name),
+			Commit: newCommitData(ctx, commit),
 			Kind:   "Folder",
 		}
 	}
@@ -119,9 +106,9 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			return err
 		}
-		data.LastCommit = newCommitData(env, rc, lastCommit)
+		data.LastCommit = newCommitData(ctx, lastCommit)
 	} else {
-		data.LastCommit = newCommitData(env, rc, commit)
+		data.LastCommit = newCommitData(ctx, commit)
 	}
 
 	uniqDirs := make(map[string]bool)
@@ -153,10 +140,5 @@ func gitTree(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	template, err := env.Template.GetTemplate("git-tree.html")
-	if err != nil {
-		return err
-	}
-
-	return template.ExecuteTemplate(w, "layout", data)
+	return ctx.RenderTemplate("git-tree.html", data)
 }

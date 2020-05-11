@@ -9,27 +9,20 @@ import (
 
 type patchData struct {
 	FileName string
-	URL string
-	Content string
+	URL      string
+	Content  string
 }
 
 type diffViewData struct {
-	Commit *commitData
+	Commit  *commitData
 	Parents []*commitData
 	TreeURL string
-	Stats object.FileStats
+	Stats   object.FileStats
 }
 
-func gitDiff(env *Env, w http.ResponseWriter, r *http.Request) error {
-	rc, err := env.getRepoConfig(r)
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
-
-	g, err := rc.open()
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
+func gitDiff(ctx *Context) error {
+	g := ctx.repo
+	r := ctx.request
 
 	vars := mux.Vars(r)
 	hashStr := vars["hash"]
@@ -49,12 +42,7 @@ func gitDiff(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	data := diffViewData{Commit: newCommitData(env, rc, commit), Stats: stats}
+	data := diffViewData{Commit: newCommitData(ctx, commit), Stats: stats}
 
-	template, err := env.Template.GetTemplate("git-diff.html")
-	if err != nil {
-		return err
-	}
-
-	return template.ExecuteTemplate(w, "layout", data)
+	return ctx.RenderTemplate("git-diff.html", data)
 }

@@ -15,7 +15,7 @@ import (
 func (env *Env) Setup() {
 	r := env.Router
 
-	handler := func(fn func(*Env, http.ResponseWriter, *http.Request) error) http.HandlerFunc {
+	handler := func(fn func(*Context) error) http.HandlerFunc {
 		return makeHandler(fn, env)
 	}
 
@@ -32,12 +32,14 @@ func (env *Env) Setup() {
 	env.Template.Setup()
 }
 
-func notImplemented(env *Env, w http.ResponseWriter, r *http.Request) error {
+func notImplemented(ctx *Context) error {
+	r := ctx.request
 	err := fmt.Errorf("Not implemented (%s) %s", mux.CurrentRoute(r).GetName(), r.URL.Path)
 	return StatusError{http.StatusNotImplemented, err}
 }
 
 var (
+	errRefNotSet    = errors.New("Ref not set")
 	errRefNotFound  = errors.New("Ref not found")
 	errRepoNotFound = errors.New("Repository not found")
 	errBlobNotFound = errors.New("Blob not found")
@@ -59,7 +61,7 @@ func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
 	ref := vars["ref"]
 
 	if ref == "" {
-		return nil, errRefNotFound
+		return nil, errRefNotSet
 	}
 
 	branch, err := g.Reference(plumbing.NewBranchReferenceName(ref), false)

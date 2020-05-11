@@ -1,13 +1,67 @@
 package handlers
 
 import (
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"log"
 	"net/http"
 )
 
-func makeHandler(fn func(*Env, http.ResponseWriter, *http.Request) error, env *Env) http.HandlerFunc {
+func getDefaultBranch(g *git.Repository) (*NamedReference, error) {
+	branch, err := g.Reference(plumbing.NewBranchReferenceName("master"), false)
+	if err != nil {
+		return nil, err
+	}
+
+	commit, err := g.CommitObject(branch.Hash())
+	if err != nil {
+		return nil, err
+	}
+
+	ref := &NamedReference{
+		Name:   "master",
+		Kind:   "branch",
+		Commit: commit,
+	}
+	return ref, nil
+}
+
+func wrapper(fn func(*Context) error, env *Env, w http.ResponseWriter, r *http.Request) error {
+	rc, err := env.getRepoConfig(r)
+	if err != nil {
+		return StatusError{http.StatusNotFound, err}
+	}
+
+	g, err := rc.open()
+	if err != nil {
+		return StatusError{http.StatusNotFound, err}
+	}
+
+	ref, err := getNamedRef(g, r)
+	if err != nil {
+		if err != errRefNotSet {
+			return StatusError{http.StatusNotFound, err}
+		}
+
+		ref, err = getDefaultBranch(g)
+		if err != nil {
+			return StatusError{http.StatusNotFound, err}
+		}
+	}
+	ctx := &Context{
+		Config:   rc,
+		Ref:      ref,
+		Env:      env,
+		response: w,
+		request:  r,
+		repo:     g,
+	}
+	return fn(ctx)
+}
+
+func makeHandler(fn func(*Context) error, env *Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := fn(env, w, r)
+		err := wrapper(fn, env, w, r)
 		if err != nil {
 			status := http.StatusInternalServerError
 			switch e := err.(type) {

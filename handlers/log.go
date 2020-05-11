@@ -24,39 +24,27 @@ func (c *commitData) Date() string {
 	return c.When.Format("2006-01-02")
 }
 
-func newCommitData(env *Env, rc *RepoConfig, commit *object.Commit) *commitData {
+func newCommitData(ctx *Context, commit *object.Commit) *commitData {
 	if commit == nil {
 		return nil
 	}
 	return &commitData{
 		Message: strings.Trim(commit.Message, "\n"),
 		Hash:    commit.Hash.String(),
-		URL:     env.getCommitURL(rc, commit),
 		When:    commit.Author.When,
+		URL:     ctx.GetCommitURL(commit),
 	}
 }
 
 type commitsViewData struct {
 	Commits []commitData
-	*RepoConfig
-	*NamedReference
+	*Context
 }
 
-func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
-	rc, err := env.getRepoConfig(r)
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
-
-	g, err := rc.open()
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
-
-	ref, err := getNamedRef(g, r)
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
+func gitLog(ctx *Context) error {
+	r := ctx.request
+	g := ctx.repo
+	ref := ctx.Ref
 
 	query := r.URL.Query()
 	next := query.Get("next")
@@ -75,7 +63,7 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	data := commitsViewData{RepoConfig: rc, NamedReference: ref}
+	data := commitsViewData{Context: ctx}
 
 	// ... just iterates over the commits
 	for i := 0; i < 20; i++ {
@@ -89,7 +77,7 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 			}
 			nextRef = plumbing.ZeroHash
 		}
-		data.Commits = append(data.Commits, *newCommitData(env, rc, c))
+		data.Commits = append(data.Commits, *newCommitData(ctx, c))
 		if len(data.Commits) >= 20 {
 			break
 		}
@@ -99,10 +87,5 @@ func gitLog(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return StatusError{http.StatusNotFound, err}
 	}
 
-	template, err := env.Template.GetTemplate("git-commits.html")
-	if err != nil {
-		return err
-	}
-
-	return template.ExecuteTemplate(w, "layout", data)
+	return ctx.RenderTemplate("git-commits.html", data)
 }

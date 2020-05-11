@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -44,39 +43,4 @@ func (env *Env) getRepoConfig(r *http.Request) (*RepoConfig, error) {
 		return nil, errRepoNotFound
 	}
 	return cfg, nil
-}
-
-func (env *Env) getCommitURL(rc *RepoConfig, c *object.Commit) string {
-	route := env.Router.Get("commit")
-	repoName := rc.Name
-
-	url, err := route.URLPath("repo", repoName, "hash", c.Hash.String())
-	if err != nil {
-		return ""
-	}
-	return url.Path
-}
-
-func (env *Env) getTreeURL(rc *RepoConfig, ref *NamedReference, path ...string) string {
-	route := env.Router.Get("tree")
-	repoName := rc.Name
-	refName := ref.Name
-
-	url, err := route.URLPath("repo", repoName, "ref", refName)
-	if err != nil {
-		return ""
-	}
-	return joinURL(url.Path, path...)
-}
-
-func (env *Env) getBlobURL(rc *RepoConfig, ref *NamedReference, path ...string) string {
-	route := env.Router.Get("blob")
-	repoName := rc.Name
-	refName := ref.Name
-
-	url, err := route.URLPath("repo", repoName, "ref", refName)
-	if err != nil {
-		return ""
-	}
-	return joinURL(url.Path, path...)
 }

@@ -31,8 +31,8 @@
 
 {{ define "content" }}
   <div class="my-3">
-    <h1>Repository: {{ .RepoConfig.Name }}</h1>
-    {{ with .NamedReference }}
+    <h1>Repository: {{ .Context.Config.Name }}</h1>
+    {{ with .Context.Ref }}
     <h2>{{ .Kind }}: {{ .Name }}</h2>
     {{ end }}
     <h2>Path: {{ .Path }}</h2>

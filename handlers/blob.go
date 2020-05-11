@@ -6,21 +6,10 @@ import (
 	"strings"
 )
 
-func gitBlob(env *Env, w http.ResponseWriter, r *http.Request) error {
-	rc, err := env.getRepoConfig(r)
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
-
-	g, err := rc.open()
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
-
-	ref, err := getNamedRef(g, r)
-	if err != nil {
-		return StatusError{http.StatusNotFound, err}
-	}
+func gitBlob(ctx *Context) error {
+	r := ctx.request
+	w := ctx.response
+	ref := ctx.Ref
 
 	commit := ref.Commit
 	tree, err := commit.Tree()
@@ -28,7 +17,7 @@ func gitBlob(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	baseURL := env.getBlobURL(rc, ref)
+	baseURL := ctx.GetBlobURL()
 	path := r.URL.Path[len(baseURL):]
 	path = strings.Trim(path, "/")
 
