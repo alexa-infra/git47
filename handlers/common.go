@@ -19,12 +19,15 @@ func (env *Env) Setup() {
 		return makeHandler(fn, env)
 	}
 
-	r.HandleFunc("/r/{repo}", handler(notImplemented)).Name("summary")
+	r.HandleFunc("/r/{repo}", handler(gitSummary)).Name("summary")
+	r.HandleFunc("/r/{repo}/summary/{ref}", handler(gitSummary)).Name("summary_ref")
 	r.PathPrefix("/r/{repo}/tree/{ref}").HandlerFunc(handler(gitTree)).Name("tree")
 	r.PathPrefix("/r/{repo}/blob/{ref}").HandlerFunc(handler(gitBlob)).Name("blob")
 	r.HandleFunc("/r/{repo}/archive/{ref}.tar.gz", handler(notImplemented)).Name("archive")
 	r.HandleFunc("/r/{repo}/commits/{ref}", handler(gitLog)).Name("commits")
 	r.HandleFunc("/r/{repo}/commit/{hash}", handler(gitDiff)).Name("commit")
+	r.HandleFunc("/r/{repo}/branches", handler(notImplemented)).Name("branches")
+	r.HandleFunc("/r/{repo}/tags", handler(notImplemented)).Name("tags")
 	r.HandleFunc("/r/{repo}/contributors", handler(notImplemented)).Name("contributors")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(env.Static.Path))))
