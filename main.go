@@ -11,11 +11,15 @@ import (
 
 func main() {
 	var noCache bool
+	var noLog bool
 	flag.BoolVar(&noCache, "nocache", false, "disable template cache")
+	flag.BoolVar(&noLog, "nolog", false, "disable request logging")
 	flag.Parse()
 
 	r := mux.NewRouter()
-	r.Use(mw.Logging)
+	if !noLog {
+		r.Use(mw.Logging)
+	}
 
 	env := &Env{
 		Router: r,
