@@ -1,8 +1,8 @@
 package main
 
 import (
-	. "github.com/alexa-infra/git47/handlers"
-	mw "github.com/alexa-infra/git47/middleware"
+	. "github.com/alexa-infra/git47/backend/handlers"
+	mw "github.com/alexa-infra/git47/backend/middleware"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
