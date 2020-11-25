@@ -13,36 +13,11 @@ import (
 )
 
 func (env *Env) Setup() {
-	r := env.Router
-
-	handler := func(fn func(*Context) error) http.HandlerFunc {
-		return makeHandler(fn, env)
-	}
-
-	r.HandleFunc("/r/{repo}", handler(gitSummary)).Name("summary")
-	r.HandleFunc("/r/{repo}/", handler(gitSummary)).Name("summary2")
-	r.HandleFunc("/r/{repo}/summary/{ref}", handler(gitSummary)).Name("summary_ref")
-	r.HandleFunc("/r/{repo}/summary/{ref}/", handler(gitSummary)).Name("summary_ref2")
-	r.PathPrefix("/r/{repo}/tree/{ref}").HandlerFunc(handler(gitTree)).Name("tree")
-	r.PathPrefix("/r/{repo}/blob/{ref}").HandlerFunc(handler(gitBlob)).Name("blob")
-	r.HandleFunc("/r/{repo}/archive/{ref}.tar.gz", handler(notImplemented)).Name("archive")
-	r.HandleFunc("/r/{repo}/commits/{ref}", handler(gitLog)).Name("commits")
-	r.HandleFunc("/r/{repo}/commits/{ref}/", handler(gitLog)).Name("commits2")
-	r.HandleFunc("/r/{repo}/commit/{hash}", handler(gitDiff)).Name("commit")
-	r.HandleFunc("/r/{repo}/commit/{hash}/", handler(gitDiff)).Name("commit2")
-	r.HandleFunc("/r/{repo}/branches", handler(notImplemented)).Name("branches")
-	r.HandleFunc("/r/{repo}/tags", handler(notImplemented)).Name("tags")
-	r.HandleFunc("/r/{repo}/contributors", handler(notImplemented)).Name("contributors")
-
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(env.Static.Path))))
-
-	env.Template.Setup()
 }
 
-func notImplemented(ctx *Context) error {
-	r := ctx.request
+func NotImplemented(w http.ResponseWriter, r *http.Request) {
 	err := fmt.Errorf("Not implemented (%s) %s", mux.CurrentRoute(r).GetName(), r.URL.Path)
-	return StatusError{http.StatusNotImplemented, err}
+	http.Error(w, err.Error(), http.StatusNotImplemented)
 }
 
 var (

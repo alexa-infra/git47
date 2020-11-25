@@ -31,7 +31,7 @@
 
 {{ define "content" }}
   <div class="my-3">
-    {{ template "repo-brand" .Context }}
+    {{ template "repo-brand" .RequestContext }}
     <h2>Path: {{ .Path }}</h2>
     {{ with .LastCommit }}
     <h2>Lastest commit: <a href="{{ .URL }}">{{ .Message }}</a> on {{ .Date }}

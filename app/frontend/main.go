@@ -1,49 +1,16 @@
 package main
 
 import (
-	. "github.com/alexa-infra/git47/backend/handlers"
-	mw "github.com/alexa-infra/git47/backend/middleware"
-	"github.com/gorilla/mux"
-	"log"
-	"net/http"
-	"flag"
+	"github.com/alexa-infra/git47/app/frontend/server"
 )
 
 func main() {
-	var noCache bool
-	var noLog bool
-	flag.BoolVar(&noCache, "nocache", false, "disable template cache")
-	flag.BoolVar(&noLog, "nolog", false, "disable request logging")
-	flag.Parse()
-
-	r := mux.NewRouter()
-	if !noLog {
-		r.Use(mw.Logging)
-	}
-
-	env := &Env{
-		Router: r,
-		Template: &TemplateConfig{
-			Path: "./templates",
-			UseCache: !noCache,
-		},
-		Repositories: RepoMap{
-			"friday": &RepoConfig{
-				Name: "friday",
-				Path: "/home/alexey/projects/friday/.git",
-			},
-			"git47": &RepoConfig{
-				Name: "git47",
-				Path: "/home/alexey/projects/go-playground/git47/.git",
-			},
-		},
-		Static: &StaticConfig{
-			Path: "./static",
-		},
-	}
-	env.Setup()
-
-	// Start server
-	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	env := server.NewEnv(server.EnvConfig{
+		StaticPath: "./static",
+		TemplatePath: "./templates",
+	})
+	env.AddRepo("inforia", "/home/alexey/projects/inforia/main/.git")
+	env.AddRepo("git47", "/home/alexey/projects/go-playground/git47/.git")
+	BuildPipeline(env)
+	env.Start()
 }

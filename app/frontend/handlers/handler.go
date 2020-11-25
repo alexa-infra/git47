@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
@@ -59,7 +60,7 @@ func wrapper(fn func(*Context) error, env *Env, w http.ResponseWriter, r *http.R
 	return fn(ctx)
 }
 
-func makeHandler(fn func(*Context) error, env *Env) http.HandlerFunc {
+func NewHandler(fn func(*Context) error, env *Env, r *mux.Router) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := wrapper(fn, env, w, r)
 		if err != nil {
