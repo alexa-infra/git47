@@ -17,6 +17,7 @@ type summaryViewData struct {
 	*server.RequestContext
 }
 
+// GitSummary returns handler which renders summary page of a repository
 func GitSummary(env *server.Env) http.HandlerFunc {
 	template := env.GetTemplate("git-summary.html", TemplateHelpers())
 	return env.WrapHandler(func(w http.ResponseWriter, r *http.Request){
@@ -74,6 +75,7 @@ func GitSummary(env *server.Env) http.HandlerFunc {
 	})
 }
 
+// GetSummaryURL builds URL of summary page
 func GetSummaryURL(rc *server.RequestContext) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("summary")

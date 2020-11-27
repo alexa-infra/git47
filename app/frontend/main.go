@@ -11,6 +11,6 @@ func main() {
 	})
 	env.AddRepo("inforia", "/home/alexey/projects/inforia/main/.git")
 	env.AddRepo("git47", "/home/alexey/projects/go-playground/git47/.git")
-	BuildPipeline(env)
+	buildPipeline(env)
 	env.Start()
 }

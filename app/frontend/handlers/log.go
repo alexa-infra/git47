@@ -43,6 +43,7 @@ type commitsViewData struct {
 	*server.RequestContext
 }
 
+// GitLog returns handler which renders a list of commits
 func GitLog(env *server.Env) http.HandlerFunc {
 	template := env.GetTemplate("git-commits.html", TemplateHelpers())
 	return env.WrapHandler(func (w http.ResponseWriter, r *http.Request) {
@@ -102,6 +103,7 @@ func GitLog(env *server.Env) http.HandlerFunc {
 	})
 }
 
+// GetLogURL builds URL of commits page
 func GetLogURL(rc *server.RequestContext) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("commits")

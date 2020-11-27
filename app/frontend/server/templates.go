@@ -8,6 +8,8 @@ import (
 	"log"
 )
 
+// GetTemplate returns template by filename, fails if there is any error
+// templates are located in env.TemplatePath and can have base layouts
 func (env *Env) GetTemplate(name string, helpers template.FuncMap) *template.Template {
 	pagePath := filepath.Join(env.TemplatePath, name)
 	layoutsPath := filepath.Join(env.TemplatePath, "layouts", "*.html")
@@ -23,6 +25,8 @@ func (env *Env) GetTemplate(name string, helpers template.FuncMap) *template.Tem
 	return t
 }
 
+// RenderTemplate renders precompiled template with data
+// result is buffered, in the case of errors, nothing should be written to output
 func (env *Env) RenderTemplate(wr io.Writer, t *template.Template, data interface{}) error {
 	buf := new(bytes.Buffer)
 	err := t.ExecuteTemplate(buf, "layout", data)

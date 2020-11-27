@@ -7,12 +7,14 @@ import (
 	"net/http"
 )
 
-func BuildPipeline(env *server.Env) {
+func buildPipeline(env *server.Env) {
 	r := env.Router
 	r.Use(middleware.Logging)
 
-	handlers.RegisterHandlers(env, r)
+	s := r.PathPrefix("/r/").Subrouter()
+	handlers.RegisterHandlers(env, s)
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(env.StaticPath))))
+	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(env.StaticPath)))
+	r.PathPrefix("/static/").Handler(staticHandler)
 
 }

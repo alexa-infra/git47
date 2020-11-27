@@ -99,7 +99,8 @@ func makeTestEnv(t *testing.T) *server.Env {
 	env.AddRepoInMemory("memory", repo)
 
 	r := env.Router
-	RegisterHandlers(env, r)
+	s := r.PathPrefix("/r/").Subrouter()
+	RegisterHandlers(env, s)
 	tEnv = env
 	return env
 }

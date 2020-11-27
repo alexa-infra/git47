@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// GitBlob returns handler, which renders single blob to http output (not formatted)
 func GitBlob(env *server.Env) http.HandlerFunc {
 	return env.WrapHandler(func (w http.ResponseWriter, r *http.Request) {
 		ctx, _ := server.GetRequestContext(r)
@@ -58,6 +59,7 @@ func GitBlob(env *server.Env) http.HandlerFunc {
 	})
 }
 
+// GetBlobURL builds URL of blob page
 func GetBlobURL(rc *server.RequestContext, path ...string) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("blob")

@@ -21,20 +21,20 @@ var (
 	errInvalidHash  = errors.New("Invalid hash")
 )
 
-type NamedReference struct {
+type namedReference struct {
 	Name   string
 	Kind   string
 	Commit *object.Commit
 }
 
-func (ref *NamedReference) Hash() plumbing.Hash {
+func (ref *namedReference) Hash() plumbing.Hash {
 	return ref.Commit.Hash
 }
 
-func getRepoConfig(env *Env, r *http.Request) (*RepoConfig, error) {
+func getRepoConfig(env *Env, r *http.Request) (*repoConfig, error) {
 	vars := mux.Vars(r)
 	repo := vars["repo"]
-	cfg, ok := env.Repositories[repo]
+	cfg, ok := env.repositories[repo]
 
 	if !ok {
 		return nil, errRepoNotFound
@@ -42,7 +42,7 @@ func getRepoConfig(env *Env, r *http.Request) (*RepoConfig, error) {
 	return cfg, nil
 }
 
-func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
+func getNamedRef(g *git.Repository, r *http.Request) (*namedReference, error) {
 	vars := mux.Vars(r)
 	ref := vars["ref"]
 
@@ -59,7 +59,7 @@ func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
 			return nil, err
 		}
 
-		return &NamedReference{
+		return &namedReference{
 			Name:   ref,
 			Kind:   "branch",
 			Commit: commit,
@@ -74,7 +74,7 @@ func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
 			return nil, err
 		}
 
-		return &NamedReference{
+		return &namedReference{
 			Name:   ref,
 			Kind:   "tag",
 			Commit: commit,
@@ -85,7 +85,7 @@ func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
 	if !hash.IsZero() {
 		commit, err := g.CommitObject(hash)
 		if err == nil {
-			return &NamedReference{
+			return &namedReference{
 				Name:   ref,
 				Kind:   "commit",
 				Commit: commit,
@@ -96,7 +96,7 @@ func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
 	return nil, errRefNotFound
 }
 
-func getDefaultBranch(g *git.Repository) (*NamedReference, error) {
+func getDefaultBranch(g *git.Repository) (*namedReference, error) {
 	branch, err := g.Reference(plumbing.NewBranchReferenceName("master"), false)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func getDefaultBranch(g *git.Repository) (*NamedReference, error) {
 		return nil, err
 	}
 
-	ref := &NamedReference{
+	ref := &namedReference{
 		Name:   "master",
 		Kind:   "branch",
 		Commit: commit,
@@ -115,13 +115,15 @@ func getDefaultBranch(g *git.Repository) (*NamedReference, error) {
 	return ref, nil
 }
 
+// RequestContext carries current repository/branch extracted from request URL
 type RequestContext struct {
-	Config *RepoConfig
+	Config *repoConfig
 	Repo *git.Repository
-	Ref *NamedReference
+	Ref *namedReference
 	Env *Env
 }
 
+// WrapHandler is used to add RequestContext to current request
 func (env *Env) WrapHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	handler := http.HandlerFunc(fn)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +141,7 @@ func setVariables(env *Env, r *http.Request) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-	g, err := rc.Open()
+	g, err := rc.open()
 	if err != nil {
 		return nil, err
 	}
@@ -164,6 +166,7 @@ func setVariables(env *Env, r *http.Request) (*http.Request, error) {
 	return r.WithContext(ctx), nil
 }
 
+// GetRequestContext returns currently presented RequestContext
 func GetRequestContext(r *http.Request) (*RequestContext, bool) {
 	ctx := r.Context()
 	reqCtx, ok := ctx.Value(reqContextKey).(*RequestContext)

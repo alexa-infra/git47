@@ -21,6 +21,7 @@ type diffViewData struct {
 	Stats   object.FileStats
 }
 
+// GitDiff returns handler which renders commit diff
 func GitDiff(env *server.Env) http.HandlerFunc {
 	template := env.GetTemplate("git-diff.html", TemplateHelpers())
 	return env.WrapHandler(func (w http.ResponseWriter, r *http.Request) {
@@ -58,6 +59,7 @@ func GitDiff(env *server.Env) http.HandlerFunc {
 	})
 }
 
+// GetCommitURL builds URL of commit diff
 func GetCommitURL(rc *server.RequestContext, commit *object.Commit) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("commit")

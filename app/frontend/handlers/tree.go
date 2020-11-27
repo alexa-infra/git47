@@ -61,6 +61,7 @@ func getLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*obj
 	}
 }
 
+// GitTree returns handler which renders file-tree of ref/path
 func GitTree(env *server.Env) http.HandlerFunc {
 	template := env.GetTemplate("git-tree.html", TemplateHelpers())
 	return env.WrapHandler(func (w http.ResponseWriter, r *http.Request) {
@@ -162,6 +163,7 @@ func GitTree(env *server.Env) http.HandlerFunc {
 	})
 }
 
+// GetTreeURL builds URL of git tree by path
 func GetTreeURL(rc *server.RequestContext, path ...string) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("tree")

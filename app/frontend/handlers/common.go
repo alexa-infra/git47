@@ -11,6 +11,7 @@ import (
 	"html/template"
 )
 
+// NotImplemented is a placeholder handler
 func NotImplemented(w http.ResponseWriter, r *http.Request) {
 	err := fmt.Errorf("Not implemented (%s) %s", mux.CurrentRoute(r).GetName(), r.URL.Path)
 	http.Error(w, err.Error(), http.StatusNotImplemented)
@@ -44,6 +45,7 @@ func joinPath(paths ...string) string {
 	return path.Join(paths...)
 }
 
+// RegisterHandlers registers all handlers on the mux router
 func RegisterHandlers(env *server.Env, r *mux.Router) {
 	summary := GitSummary(env)
 	tree := GitTree(env)
@@ -51,22 +53,23 @@ func RegisterHandlers(env *server.Env, r *mux.Router) {
 	commits := GitLog(env)
 	diff := GitDiff(env)
 
-	r.Handle("/r/{repo}", summary).Name("summary")
-	r.Handle("/r/{repo}/", summary).Name("summary2")
-	r.Handle("/r/{repo}/summary/{ref}", summary).Name("summary_ref")
-	r.Handle("/r/{repo}/summary/{ref}/", summary).Name("summary_ref2")
-	r.PathPrefix("/r/{repo}/tree/{ref}").Handler(tree).Name("tree")
-	r.PathPrefix("/r/{repo}/blob/{ref}").Handler(blob).Name("blob")
-	r.HandleFunc("/r/{repo}/archive/{ref}.tar.gz", NotImplemented).Name("archive")
-	r.Handle("/r/{repo}/commits/{ref}", commits).Name("commits")
-	r.Handle("/r/{repo}/commits/{ref}/", commits).Name("commits2")
-	r.Handle("/r/{repo}/commit/{hash}", diff).Name("commit")
-	r.Handle("/r/{repo}/commit/{hash}/", diff).Name("commit2")
-	r.HandleFunc("/r/{repo}/branches", NotImplemented).Name("branches")
-	r.HandleFunc("/r/{repo}/tags", NotImplemented).Name("tags")
-	r.HandleFunc("/r/{repo}/contributors", NotImplemented).Name("contributors")
+	r.Handle("/{repo}", summary).Name("summary")
+	r.Handle("/{repo}/", summary).Name("summary2")
+	r.Handle("/{repo}/summary/{ref}", summary).Name("summary_ref")
+	r.Handle("/{repo}/summary/{ref}/", summary).Name("summary_ref2")
+	r.PathPrefix("/{repo}/tree/{ref}").Handler(tree).Name("tree")
+	r.PathPrefix("/{repo}/blob/{ref}").Handler(blob).Name("blob")
+	r.HandleFunc("/{repo}/archive/{ref}.tar.gz", NotImplemented).Name("archive")
+	r.Handle("/{repo}/commits/{ref}", commits).Name("commits")
+	r.Handle("/{repo}/commits/{ref}/", commits).Name("commits2")
+	r.Handle("/{repo}/commit/{hash}", diff).Name("commit")
+	r.Handle("/{repo}/commit/{hash}/", diff).Name("commit2")
+	r.HandleFunc("/{repo}/branches", NotImplemented).Name("branches")
+	r.HandleFunc("/{repo}/tags", NotImplemented).Name("tags")
+	r.HandleFunc("/{repo}/contributors", NotImplemented).Name("contributors")
 }
 
+// TemplateHelpers returns a list of helper functions used in templates
 func TemplateHelpers() template.FuncMap {
 	return template.FuncMap{
 		"GetSummaryURL": GetSummaryURL,

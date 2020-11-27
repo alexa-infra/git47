@@ -4,14 +4,14 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-type RepoConfig struct {
+type repoConfig struct {
 	Name        string
 	Path        string
 	Description string
 	inMemory    *git.Repository
 }
 
-func (rc *RepoConfig) Open() (*git.Repository, error) {
+func (rc *repoConfig) open() (*git.Repository, error) {
 	if rc.inMemory != nil {
 		return rc.inMemory, nil
 	}
@@ -19,4 +19,4 @@ func (rc *RepoConfig) Open() (*git.Repository, error) {
 	return git.PlainOpen(rc.Path)
 }
 
-type repoMap map[string]*RepoConfig
+type repoMap map[string]*repoConfig
