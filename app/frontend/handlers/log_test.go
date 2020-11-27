@@ -15,7 +15,7 @@ func TestGitLog(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitLog, env))
+	handler := GitLog(env)
 
 	handler.ServeHTTP(rr, req)
 
@@ -32,7 +32,7 @@ func TestGitLogNext(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitLog, env))
+	handler := GitLog(env)
 
 	handler.ServeHTTP(rr, req)
 
@@ -49,7 +49,7 @@ func TestGitLogNextNotFound(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitLog, env))
+	handler := GitLog(env)
 
 	handler.ServeHTTP(rr, req)
 

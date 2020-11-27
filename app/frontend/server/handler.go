@@ -1,7 +1,6 @@
-package middleware
+package server
 
 import (
-	"github.com/alexa-infra/git47/app/frontend/server"
 	"github.com/gorilla/mux"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -32,7 +31,7 @@ func (ref *NamedReference) Hash() plumbing.Hash {
 	return ref.Commit.Hash
 }
 
-func getRepoConfig(env *server.Env, r *http.Request) (*server.RepoConfig, error) {
+func getRepoConfig(env *Env, r *http.Request) (*RepoConfig, error) {
 	vars := mux.Vars(r)
 	repo := vars["repo"]
 	cfg, ok := env.Repositories[repo]
@@ -117,49 +116,52 @@ func getDefaultBranch(g *git.Repository) (*NamedReference, error) {
 }
 
 type RequestContext struct {
-	Config *server.RepoConfig
+	Config *RepoConfig
 	Repo *git.Repository
 	Ref *NamedReference
-	Env *server.Env
+	Env *Env
 }
 
-func Variables(env *server.Env) (func(http.Handler) http.Handler) {
-	return func (next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rc, err := getRepoConfig(env, r)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return
-			}
-			g, err := rc.Open()
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			ref, err := getNamedRef(g, r)
-			if err != nil {
-				if err != errRefNotSet {
-					http.Error(w, err.Error(), http.StatusNotFound)
-					return
-				}
+func (env *Env) WrapHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+	handler := http.HandlerFunc(fn)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r, err := setVariables(env, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		handler.ServeHTTP(w, r)
+	})
+}
 
-				ref, err = getDefaultBranch(g)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusNotFound)
-					return
-				}
-			}
-			reqCtx := &RequestContext{
-				Config: rc,
-				Repo: g,
-				Ref: ref,
-				Env: env,
-			}
-			ctx := context.WithValue(r.Context(), reqContextKey, reqCtx)
-			r = r.WithContext(ctx)
-			next.ServeHTTP(w, r)
-		})
+func setVariables(env *Env, r *http.Request) (*http.Request, error) {
+	rc, err := getRepoConfig(env, r)
+	if err != nil {
+		return nil, err
 	}
+	g, err := rc.Open()
+	if err != nil {
+		return nil, err
+	}
+	ref, err := getNamedRef(g, r)
+	if err != nil {
+		if err != errRefNotSet {
+			return nil, err
+		}
+
+		ref, err = getDefaultBranch(g)
+		if err != nil {
+			return nil, err
+		}
+	}
+	reqCtx := &RequestContext{
+		Config: rc,
+		Repo: g,
+		Ref: ref,
+		Env: env,
+	}
+	ctx := context.WithValue(r.Context(), reqContextKey, reqCtx)
+	return r.WithContext(ctx), nil
 }
 
 func GetRequestContext(r *http.Request) (*RequestContext, bool) {

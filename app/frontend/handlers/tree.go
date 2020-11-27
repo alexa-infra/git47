@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"github.com/alexa-infra/git47/app/frontend/server"
-	"github.com/alexa-infra/git47/app/frontend/middleware"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"net/http"
 	"strings"
-	"log"
 )
 
 type fileData struct {
@@ -22,7 +20,7 @@ type treeViewData struct {
 	Dirs       []fileData
 	Path       string
 	LastCommit *commitData
-	*middleware.RequestContext
+	*server.RequestContext
 }
 
 func getLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*object.Commit, error) {
@@ -64,12 +62,9 @@ func getLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*obj
 }
 
 func GitTree(env *server.Env) http.HandlerFunc {
-	template, err := env.GetTemplate("git-tree.html")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return func (w http.ResponseWriter, r *http.Request) {
-		reqCtx, _ := middleware.GetRequestContext(r)
+	template := env.GetTemplate("git-tree.html", TemplateHelpers())
+	return env.WrapHandler(func (w http.ResponseWriter, r *http.Request) {
+		reqCtx, _ := server.GetRequestContext(r)
 		g := reqCtx.Repo
 		ref := reqCtx.Ref
 		commit := ref.Commit
@@ -164,10 +159,10 @@ func GitTree(env *server.Env) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	}
+	})
 }
 
-func GetTreeURL(rc *middleware.RequestContext, path ...string) (string, error) {
+func GetTreeURL(rc *server.RequestContext, path ...string) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("tree")
 	url, err := route.URLPath("repo", rc.Config.Name, "ref", rc.Ref.Name)

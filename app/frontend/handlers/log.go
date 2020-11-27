@@ -2,14 +2,12 @@ package handlers
 
 import (
 	"github.com/alexa-infra/git47/app/frontend/server"
-	"github.com/alexa-infra/git47/app/frontend/middleware"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"net/http"
 	"strings"
 	"time"
-	"log"
 )
 
 type commitData struct {
@@ -27,7 +25,7 @@ func (c *commitData) Date() string {
 	return c.When.Format("2006-01-02")
 }
 
-func newCommitData(ctx *middleware.RequestContext, commit *object.Commit) *commitData {
+func newCommitData(ctx *server.RequestContext, commit *object.Commit) *commitData {
 	if commit == nil {
 		return nil
 	}
@@ -42,16 +40,13 @@ func newCommitData(ctx *middleware.RequestContext, commit *object.Commit) *commi
 
 type commitsViewData struct {
 	Commits []commitData
-	*middleware.RequestContext
+	*server.RequestContext
 }
 
 func GitLog(env *server.Env) http.HandlerFunc {
-	template, err := env.GetTemplate("git-commits.html")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return func (w http.ResponseWriter, r *http.Request) {
-		ctx, _ := middleware.GetRequestContext(r)
+	template := env.GetTemplate("git-commits.html", TemplateHelpers())
+	return env.WrapHandler(func (w http.ResponseWriter, r *http.Request) {
+		ctx, _ := server.GetRequestContext(r)
 		g := ctx.Repo
 		ref := ctx.Ref
 
@@ -104,10 +99,10 @@ func GitLog(env *server.Env) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	}
+	})
 }
 
-func GetLogURL(rc *middleware.RequestContext) (string, error) {
+func GetLogURL(rc *server.RequestContext) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("commits")
 	url, err := route.URLPath("repo", rc.Config.Name, "ref", rc.Ref.Name)

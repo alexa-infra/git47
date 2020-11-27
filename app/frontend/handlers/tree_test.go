@@ -15,7 +15,7 @@ func TestTreeMaster(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitTree, env))
+	handler := GitTree(env)
 
 	handler.ServeHTTP(rr, req)
 
@@ -32,7 +32,7 @@ func TestTreeMasterSubtree(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitTree, env))
+	handler := GitTree(env)
 
 	handler.ServeHTTP(rr, req)
 
@@ -48,7 +48,7 @@ func TestTreeMasterSubtreeNotFound(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitTree, env))
+	handler := GitTree(env)
 
 	handler.ServeHTTP(rr, req)
 
@@ -62,7 +62,7 @@ func TestTreeMasterSubtreeFile(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "master"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitTree, env))
+	handler := GitTree(env)
 
 	handler.ServeHTTP(rr, req)
 

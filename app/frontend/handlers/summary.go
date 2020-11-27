@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"github.com/alexa-infra/git47/app/frontend/server"
-	"github.com/alexa-infra/git47/app/frontend/middleware"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"net/http"
-	"log"
 )
 
 type summaryViewData struct {
@@ -16,16 +14,13 @@ type summaryViewData struct {
 	NumTags         int
 	NumFiles        int
 	NumContributors int
-	*middleware.RequestContext
+	*server.RequestContext
 }
 
 func GitSummary(env *server.Env) http.HandlerFunc {
-	template, err := env.GetTemplate("git-summary.html")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return func (w http.ResponseWriter, r *http.Request) {
-		reqCtx, _ := middleware.GetRequestContext(r)
+	template := env.GetTemplate("git-summary.html", TemplateHelpers())
+	return env.WrapHandler(func(w http.ResponseWriter, r *http.Request){
+		reqCtx, _ := server.GetRequestContext(r)
 		g := reqCtx.Repo
 		ref := reqCtx.Ref
 
@@ -76,10 +71,10 @@ func GitSummary(env *server.Env) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	}
+	})
 }
 
-func GetSummaryURL(rc *middleware.RequestContext) (string, error) {
+func GetSummaryURL(rc *server.RequestContext) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("summary")
 	url, err := route.URLPath("repo", rc.Config.Name)

@@ -1,13 +1,13 @@
 package handlers
 
 import (
+	"github.com/alexa-infra/git47/app/frontend/server"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/util"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -83,33 +83,23 @@ func prepareRepository(t *testing.T) *git.Repository {
 	return r
 }
 
-var tEnv *Env
+var tEnv *server.Env
 
-func makeTestEnv(t *testing.T) *Env {
+func makeTestEnv(t *testing.T) *server.Env {
 	if tEnv != nil {
 		return tEnv
 	}
 
-	r := mux.NewRouter()
 	repo := prepareRepository(t)
 
-	env := &Env{
-		Router: r,
-		Template: &TemplateConfig{
-			Path:     "../templates",
-			UseCache: true,
-		},
-		Repositories: RepoMap{
-			"memory": &RepoConfig{
-				Name:     "memory",
-				InMemory: repo,
-			},
-		},
-		Static: &StaticConfig{
-			Path: "../static",
-		},
-	}
-	env.Setup()
+	env := server.NewEnv(server.EnvConfig{
+		StaticPath: "../static",
+		TemplatePath: "../../../templates",
+	})
+	env.AddRepoInMemory("memory", repo)
+
+	r := env.Router
+	RegisterHandlers(env, r)
 	tEnv = env
 	return env
 }

@@ -1,15 +1,15 @@
 package handlers
 
 import (
-	"github.com/alexa-infra/git47/app/frontend/middleware"
+	"github.com/alexa-infra/git47/app/frontend/server"
 	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
-func GitBlob() http.HandlerFunc {
-	return func (w http.ResponseWriter, r *http.Request) {
-		ctx, _ := middleware.GetRequestContext(r)
+func GitBlob(env *server.Env) http.HandlerFunc {
+	return env.WrapHandler(func (w http.ResponseWriter, r *http.Request) {
+		ctx, _ := server.GetRequestContext(r)
 		ref := ctx.Ref
 
 		commit := ref.Commit
@@ -55,10 +55,10 @@ func GitBlob() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	}
+	})
 }
 
-func GetBlobURL(rc *middleware.RequestContext, path ...string) (string, error) {
+func GetBlobURL(rc *server.RequestContext, path ...string) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("blob")
 	url, err := route.URLPath("repo", rc.Config.Name, "ref", rc.Ref.Name)

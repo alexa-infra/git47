@@ -6,7 +6,7 @@ import (
 
 func main() {
 	env := server.NewEnv(server.EnvConfig{
-		StaticPath: "./static",
+		StaticPath:   "./static",
 		TemplatePath: "./templates",
 	})
 	env.AddRepo("inforia", "/home/alexey/projects/inforia/main/.git")

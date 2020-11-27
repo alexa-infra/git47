@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"github.com/alexa-infra/git47/app/frontend/server"
-	"github.com/alexa-infra/git47/app/frontend/middleware"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gorilla/mux"
 	"net/http"
-	"log"
 )
 
 type patchData struct {
@@ -24,12 +22,9 @@ type diffViewData struct {
 }
 
 func GitDiff(env *server.Env) http.HandlerFunc {
-	template, err := env.GetTemplate("git-diff.html")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return func (w http.ResponseWriter, r *http.Request) {
-		ctx, _ := middleware.GetRequestContext(r)
+	template := env.GetTemplate("git-diff.html", TemplateHelpers())
+	return env.WrapHandler(func (w http.ResponseWriter, r *http.Request) {
+		ctx, _ := server.GetRequestContext(r)
 		g := ctx.Repo
 
 		vars := mux.Vars(r)
@@ -60,10 +55,10 @@ func GitDiff(env *server.Env) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	}
+	})
 }
 
-func GetCommitURL(rc *middleware.RequestContext, commit *object.Commit) (string, error) {
+func GetCommitURL(rc *server.RequestContext, commit *object.Commit) (string, error) {
 	router := rc.Env.Router
 	route := router.Get("commit")
 	url, err := route.URLPath("repo", rc.Config.Name, "hash", commit.Hash.String())

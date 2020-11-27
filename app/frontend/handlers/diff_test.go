@@ -15,7 +15,7 @@ func TestGitDiff(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "hash": "60a58ae38710f264b2c00f77c82ae44419381a3f"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitDiff, env))
+	handler := GitDiff(env)
 
 	handler.ServeHTTP(rr, req)
 

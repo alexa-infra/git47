@@ -1,19 +1,15 @@
 package handlers
 
 import (
+	"github.com/alexa-infra/git47/app/frontend/server"
 	"errors"
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gorilla/mux"
 	"net/http"
 	"path"
 	"strings"
+	"html/template"
 )
-
-func (env *Env) Setup() {
-}
 
 func NotImplemented(w http.ResponseWriter, r *http.Request) {
 	err := fmt.Errorf("Not implemented (%s) %s", mux.CurrentRoute(r).GetName(), r.URL.Path)
@@ -28,69 +24,6 @@ var (
 	errInvalidHash  = errors.New("Invalid hash")
 )
 
-type NamedReference struct {
-	Name   string
-	Kind   string
-	Commit *object.Commit
-}
-
-func (ref *NamedReference) Hash() plumbing.Hash {
-	return ref.Commit.Hash
-}
-
-func getNamedRef(g *git.Repository, r *http.Request) (*NamedReference, error) {
-	vars := mux.Vars(r)
-	ref := vars["ref"]
-
-	if ref == "" {
-		return nil, errRefNotSet
-	}
-
-	branch, err := g.Reference(plumbing.NewBranchReferenceName(ref), false)
-	if err == nil {
-		hash := branch.Hash()
-
-		commit, err := g.CommitObject(hash)
-		if err != nil {
-			return nil, err
-		}
-
-		return &NamedReference{
-			Name:   ref,
-			Kind:   "branch",
-			Commit: commit,
-		}, nil
-	}
-	tag, err := g.Reference(plumbing.NewTagReferenceName(ref), false)
-	if err == nil {
-		hash := tag.Hash()
-
-		commit, err := g.CommitObject(hash)
-		if err != nil {
-			return nil, err
-		}
-
-		return &NamedReference{
-			Name:   ref,
-			Kind:   "tag",
-			Commit: commit,
-		}, nil
-	}
-
-	hash := plumbing.NewHash(ref)
-	if !hash.IsZero() {
-		commit, err := g.CommitObject(hash)
-		if err == nil {
-			return &NamedReference{
-				Name:   ref,
-				Kind:   "commit",
-				Commit: commit,
-			}, nil
-		}
-	}
-
-	return nil, errRefNotFound
-}
 
 func parentPath(path string) string {
 	if strings.Index(path, "/") > -1 {
@@ -109,4 +42,37 @@ func joinURL(base string, paths ...string) string {
 
 func joinPath(paths ...string) string {
 	return path.Join(paths...)
+}
+
+func RegisterHandlers(env *server.Env, r *mux.Router) {
+	summary := GitSummary(env)
+	tree := GitTree(env)
+	blob := GitBlob(env)
+	commits := GitLog(env)
+	diff := GitDiff(env)
+
+	r.Handle("/r/{repo}", summary).Name("summary")
+	r.Handle("/r/{repo}/", summary).Name("summary2")
+	r.Handle("/r/{repo}/summary/{ref}", summary).Name("summary_ref")
+	r.Handle("/r/{repo}/summary/{ref}/", summary).Name("summary_ref2")
+	r.PathPrefix("/r/{repo}/tree/{ref}").Handler(tree).Name("tree")
+	r.PathPrefix("/r/{repo}/blob/{ref}").Handler(blob).Name("blob")
+	r.HandleFunc("/r/{repo}/archive/{ref}.tar.gz", NotImplemented).Name("archive")
+	r.Handle("/r/{repo}/commits/{ref}", commits).Name("commits")
+	r.Handle("/r/{repo}/commits/{ref}/", commits).Name("commits2")
+	r.Handle("/r/{repo}/commit/{hash}", diff).Name("commit")
+	r.Handle("/r/{repo}/commit/{hash}/", diff).Name("commit2")
+	r.HandleFunc("/r/{repo}/branches", NotImplemented).Name("branches")
+	r.HandleFunc("/r/{repo}/tags", NotImplemented).Name("tags")
+	r.HandleFunc("/r/{repo}/contributors", NotImplemented).Name("contributors")
+}
+
+func TemplateHelpers() template.FuncMap {
+	return template.FuncMap{
+		"GetSummaryURL": GetSummaryURL,
+		"GetTreeURL": GetTreeURL,
+		"GetLogURL": GetLogURL,
+		"GetCommitURL": GetCommitURL,
+		"GetBlobURL": GetBlobURL,
+	}
 }

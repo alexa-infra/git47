@@ -1,7 +1,7 @@
 {{ define "title" }}Git commits{{ end }}
 
 {{ define "content" }}
-  {{ template "repo-brand" .Context }}
+  {{ template "repo-brand" .RequestContext }}
   <ul>
     {{ range .Commits }}
     <li>

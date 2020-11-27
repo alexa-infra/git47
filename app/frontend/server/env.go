@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"log"
-	"html/template"
 )
 
 type EnvConfig struct {
@@ -16,7 +15,6 @@ type EnvConfig struct {
 type Env struct {
 	Router *mux.Router
 	Repositories repoMap
-	Helpers template.FuncMap
 	EnvConfig
 }
 
@@ -24,7 +22,6 @@ func NewEnv(config EnvConfig) *Env {
 	return &Env{
 		Router: mux.NewRouter(),
 		Repositories: make(repoMap),
-		Helpers: make(template.FuncMap),
 		EnvConfig: config,
 	}
 }

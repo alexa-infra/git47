@@ -15,7 +15,7 @@ func TestGitBlob(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "60a58ae38710f264b2c00f77c82ae44419381a3f"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitBlob, env))
+	handler := GitBlob(env)
 
 	handler.ServeHTTP(rr, req)
 
@@ -31,7 +31,7 @@ func TestGitBlobNotFound(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "5e1c309dae7f45e0f39b1bf3ac3cd9db12e7d689"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitBlob, env))
+	handler := GitBlob(env)
 
 	handler.ServeHTTP(rr, req)
 
@@ -45,7 +45,7 @@ func TestGitBlobDir(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"repo": "memory", "ref": "60a58ae38710f264b2c00f77c82ae44419381a3f"})
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(makeHandler(gitBlob, env))
+	handler := GitBlob(env)
 
 	handler.ServeHTTP(rr, req)
 
