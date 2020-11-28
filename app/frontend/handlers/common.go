@@ -66,5 +66,41 @@ func TemplateHelpers() template.FuncMap {
 		"GetLogURL": GetLogURL,
 		"GetCommitURL": GetCommitURL,
 		"GetBlobURL": GetBlobURL,
+		"GetBranchesURL": GetBranchesURL,
+		"GetTagsURL": GetTagsURL,
+		"GetContributorsURL": GetContributorsURL,
 	}
+}
+
+// GetBranchesURL builds URL of branches list page
+func GetBranchesURL(rc *server.RequestContext) (string, error) {
+	router := rc.Env.Router
+	route := router.Get("branches")
+	url, err := route.URLPath("repo", rc.Config.Name)
+	if err != nil {
+		return "", err
+	}
+	return url.Path, nil
+}
+
+// GetTagsURL builds URL of tags list page
+func GetTagsURL(rc *server.RequestContext) (string, error) {
+	router := rc.Env.Router
+	route := router.Get("tags")
+	url, err := route.URLPath("repo", rc.Config.Name)
+	if err != nil {
+		return "", err
+	}
+	return url.Path, nil
+}
+
+// GetContributorsURL builds URL of branches list page
+func GetContributorsURL(rc *server.RequestContext) (string, error) {
+	router := rc.Env.Router
+	route := router.Get("contributors")
+	url, err := route.URLPath("repo", rc.Config.Name)
+	if err != nil {
+		return "", err
+	}
+	return url.Path, nil
 }

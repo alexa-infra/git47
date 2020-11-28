@@ -6,9 +6,9 @@
     <div class="flex">
       <a class="flex-auto text-center" href="{{ GetTreeURL .RequestContext }}"><i class="far fa-file-alt"></i> {{ .NumFiles }} Files</a>
       <a class="flex-auto text-center" href="{{ GetLogURL .RequestContext }}"><i class="far fa-check-square"></i> {{ .NumCommits }} Commits</a>
-      <a class="flex-auto text-center" href="#"><i class="far fa-sticky-note"></i> {{ .NumBranches }} Branches</a>
-      <a class="flex-auto text-center" href="#"><i class="far fa-bookmark"></i> {{ .NumTags }} Tags</a>
-      <a class="flex-auto text-center" href="#"><i class="far fa-user-circle"></i> {{ .NumContributors }} Contributors</a>
+      <a class="flex-auto text-center" href="{{ GetBranchesURL .RequestContext }}"><i class="far fa-sticky-note"></i> {{ .NumBranches }} Branches</a>
+      <a class="flex-auto text-center" href="{{ GetTagsURL .RequestContext }}"><i class="far fa-bookmark"></i> {{ .NumTags }} Tags</a>
+      <a class="flex-auto text-center" href="{{ GetContributorsURL .RequestContext }}"><i class="far fa-user-circle"></i> {{ .NumContributors }} Contributors</a>
     </div>
   </div>
 {{ end }}
