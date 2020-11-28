@@ -17,8 +17,6 @@ var (
 	errRefNotSet    = errors.New("Ref not set")
 	errRefNotFound  = errors.New("Ref not found")
 	errRepoNotFound = errors.New("Repository not found")
-	errBlobNotFound = errors.New("Blob not found")
-	errInvalidHash  = errors.New("Invalid hash")
 )
 
 type namedReference struct {

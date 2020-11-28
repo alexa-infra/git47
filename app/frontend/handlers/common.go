@@ -18,20 +18,9 @@ func NotImplemented(w http.ResponseWriter, r *http.Request) {
 }
 
 var (
-	errRefNotSet    = errors.New("Ref not set")
-	errRefNotFound  = errors.New("Ref not found")
-	errRepoNotFound = errors.New("Repository not found")
-	errBlobNotFound = errors.New("Blob not found")
 	errInvalidHash  = errors.New("Invalid hash")
 )
 
-
-func parentPath(path string) string {
-	if strings.Index(path, "/") > -1 {
-		return path[:strings.LastIndex(path, "/")]
-	}
-	return ""
-}
 
 func joinURL(base string, paths ...string) string {
 	p := path.Join(paths...)
