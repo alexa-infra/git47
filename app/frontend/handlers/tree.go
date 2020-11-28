@@ -84,7 +84,10 @@ func GitTree(env *server.Env) http.HandlerFunc {
 		path := r.URL.Path[len(baseURL):]
 		path = strings.Trim(path, "/")
 
-		data := treeViewData{RequestContext: reqCtx}
+		data := treeViewData{
+			RequestContext: reqCtx,
+			Path:           path,
+		}
 
 		newFileData := func(commit *object.Commit, name string) fileData {
 			url, _ := GetBlobURL(reqCtx, path, name)
