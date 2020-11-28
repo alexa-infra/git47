@@ -160,8 +160,8 @@ func setVariables(env *Env, r *http.Request) (*http.Request, error) {
 		Ref: ref,
 		Env: env,
 	}
-	ctx := context.WithValue(r.Context(), reqContextKey, reqCtx)
-	return r.WithContext(ctx), nil
+	newReq := WithRequestContext(r, reqCtx)
+	return newReq, nil
 }
 
 // GetRequestContext returns currently presented RequestContext
@@ -169,4 +169,11 @@ func GetRequestContext(r *http.Request) (*RequestContext, bool) {
 	ctx := r.Context()
 	reqCtx, ok := ctx.Value(reqContextKey).(*RequestContext)
 	return reqCtx, ok
+}
+
+// WithRequestContext returns new request with RequestContext set up
+func WithRequestContext(r *http.Request, reqCtx *RequestContext) *http.Request {
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, reqContextKey, reqCtx)
+	return r.WithContext(ctx)
 }

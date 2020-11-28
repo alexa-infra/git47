@@ -21,12 +21,12 @@ type summaryViewData struct {
 func GitSummary(env *server.Env) http.HandlerFunc {
 	template := env.GetTemplate("git-summary.html", TemplateHelpers())
 	return env.WrapHandler(func(w http.ResponseWriter, r *http.Request){
-		reqCtx, _ := server.GetRequestContext(r)
-		g := reqCtx.Repo
-		ref := reqCtx.Ref
+		ctx, _ := server.GetRequestContext(r)
+		g := ctx.Repo
+		ref := ctx.Ref
 
 		data := summaryViewData{
-			RequestContext: reqCtx,
+			RequestContext: ctx,
 		}
 
 		cIter, err := g.Log(&git.LogOptions{From: ref.Hash()})

@@ -65,9 +65,9 @@ func getLastCommit(g *git.Repository, ref *object.Commit, paths ...string) (*obj
 func GitTree(env *server.Env) http.HandlerFunc {
 	template := env.GetTemplate("git-tree.html", TemplateHelpers())
 	return env.WrapHandler(func (w http.ResponseWriter, r *http.Request) {
-		reqCtx, _ := server.GetRequestContext(r)
-		g := reqCtx.Repo
-		ref := reqCtx.Ref
+		ctx, _ := server.GetRequestContext(r)
+		g := ctx.Repo
+		ref := ctx.Ref
 		commit := ref.Commit
 
 		tree, err := commit.Tree()
@@ -76,7 +76,7 @@ func GitTree(env *server.Env) http.HandlerFunc {
 			return
 		}
 
-		baseURL, err := GetTreeURL(reqCtx)
+		baseURL, err := GetTreeURL(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -85,26 +85,26 @@ func GitTree(env *server.Env) http.HandlerFunc {
 		path = strings.Trim(path, "/")
 
 		data := treeViewData{
-			RequestContext: reqCtx,
+			RequestContext: ctx,
 			Path:           path,
 		}
 
 		newFileData := func(commit *object.Commit, name string) fileData {
-			url, _ := GetBlobURL(reqCtx, path, name)
+			url, _ := GetBlobURL(ctx, path, name)
 			return fileData{
 				Name:   name,
 				URL:    url,
-				Commit: newCommitData(reqCtx, commit),
+				Commit: newCommitData(ctx, commit),
 				Kind:   "File",
 			}
 		}
 
 		newFolderData := func(commit *object.Commit, name string) fileData {
-			url, _ := GetTreeURL(reqCtx, path, name)
+			url, _ := GetTreeURL(ctx, path, name)
 			return fileData{
 				Name:   name,
 				URL:    url,
-				Commit: newCommitData(reqCtx, commit),
+				Commit: newCommitData(ctx, commit),
 				Kind:   "Folder",
 			}
 		}
@@ -123,9 +123,9 @@ func GitTree(env *server.Env) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			data.LastCommit = newCommitData(reqCtx, lastCommit)
+			data.LastCommit = newCommitData(ctx, lastCommit)
 		} else {
-			data.LastCommit = newCommitData(reqCtx, commit)
+			data.LastCommit = newCommitData(ctx, commit)
 		}
 
 		uniqDirs := make(map[string]bool)
