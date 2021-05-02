@@ -1,4 +1,4 @@
-package server
+package core
 
 import (
 	"github.com/go-git/go-billy/v5/memfs"
@@ -81,4 +81,14 @@ func MakeTestRepository(t *testing.T) *git.Repository {
 	require.Nil(t, err)
 
 	return r
+}
+
+func MakeTestRepositories(t *testing.T) RepoMap {
+	repo := MakeTestRepository(t)
+	return RepoMap{
+		"memory": {
+			Name:     "memory",
+			InMemory: repo,
+		},
+	}
 }

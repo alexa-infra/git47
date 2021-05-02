@@ -2,36 +2,36 @@
 GO_SRC := $(shell find . -name "*.go")
 FA_DIR := node_modules/@fortawesome/fontawesome-free/webfonts
 FA_FONTS_SOURCE := $(wildcard $(FA_DIR)/*.ttf) $(wildcard $(FA_DIR)/*.woff) $(wildcard $(FA_DIR)/*.woff2) $(wildcard $(FA_DIR)/*.eot)
-FA_FONTS_TARGET := $(patsubst $(FA_DIR)/%, static/webfonts/%, $(FA_FONTS_SOURCE))
+FA_FONTS_TARGET := $(patsubst $(FA_DIR)/%, internal/web/static/webfonts/%, $(FA_FONTS_SOURCE))
 
 git47: $(GO_SRC)
-	go build -o git47 app/frontend/
+	go build -o git47 main.go
 
 check:
-	gofmt -l -w ./app/**/*.go
-	golint ./app/...
+	gofmt -l -w ./internal/**/*.go main.go
+	golint ./...
 
 clean:
 	rm git47
-	rm -r static
+	rm -r internal/web/static
 
-static/css/styles.css: css/styles.css css/content.css
+internal/web/static/css/styles.css: css/styles.css css/content.css
 	npx postcss css/styles.css -o $@
 
-static/css/fontawesome.css: css/fontawesome.css
+internal/web/static/css/fontawesome.css: css/fontawesome.css
 	npx postcss $< -o $@
 
-static/favicon.ico: css/favicon.ico
-	@test -d static || mkdir static
+internal/web/static/favicon.ico: css/favicon.ico
+	@test -d internal/web/static || mkdir internal/web/static
 	cp $< $@
 
-static/webfonts/%: $(FA_DIR)/%
-	@test -d static/webfonts || mkdir -p static/webfonts
+internal/web/static/webfonts/%: $(FA_DIR)/%
+	@test -d internal/web/static/webfonts || mkdir -p internal/web/static/webfonts
 	cp $< $@
 
-static: static/css/styles.css static/css/fontawesome.css static/favicon.ico $(FA_FONTS_TARGET)
+static: internal/web/static/css/styles.css internal/web/static/css/fontawesome.css internal/web/static/favicon.ico $(FA_FONTS_TARGET)
 
-all: git47 static
+all: static git47
 
 dev:
 	modd
