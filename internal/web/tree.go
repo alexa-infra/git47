@@ -76,7 +76,7 @@ func GitTree(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, x := range tree.Dirs {
-		data.Files = append(data.Files, newFolderData(x))
+		data.Dirs = append(data.Dirs, newFolderData(x))
 	}
 
 	if path != "" {
