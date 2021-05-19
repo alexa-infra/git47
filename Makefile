@@ -4,7 +4,7 @@ FA_DIR := node_modules/@fortawesome/fontawesome-free/webfonts
 FA_FONTS_SOURCE := $(wildcard $(FA_DIR)/*.ttf) $(wildcard $(FA_DIR)/*.woff) $(wildcard $(FA_DIR)/*.woff2) $(wildcard $(FA_DIR)/*.eot)
 FA_FONTS_TARGET := $(patsubst $(FA_DIR)/%, internal/web/static/webfonts/%, $(FA_FONTS_SOURCE))
 
-git47: $(GO_SRC)
+git47: $(GO_SRC) static
 	go build -o git47 main.go
 
 check:
@@ -31,7 +31,7 @@ internal/web/static/webfonts/%: $(FA_DIR)/%
 
 static: internal/web/static/css/styles.css internal/web/static/css/fontawesome.css internal/web/static/favicon.ico $(FA_FONTS_TARGET)
 
-all: static git47
+all: git47
 
 dev:
 	modd
