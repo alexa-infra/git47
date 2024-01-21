@@ -1,5 +1,5 @@
 module.exports = {
-  purge: [
+  content: [
     './internal/web/templates/**/*.html'
   ],
   darkMode: 'media',
