@@ -20,7 +20,7 @@ func (app *App) Start() {
 }
 
 func NewApp(config *Config, repositories core.RepoMap) (*App, error) {
-	router, err := NewRouter(config, repositories)
+	router, err := newRouter(config, repositories)
 	if err != nil {
 		return nil, err
 	}

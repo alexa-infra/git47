@@ -6,14 +6,14 @@ import (
 	"strings"
 )
 
-func GitBlob(w http.ResponseWriter, r *http.Request) {
-	ctx, ok := GetRequestContext(r)
+func blobHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, ok := getRequestContext(r)
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	baseURL, err := GetBlobURL(ctx)
+	baseURL, err := getBlobURL(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

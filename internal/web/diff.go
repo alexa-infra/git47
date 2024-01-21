@@ -14,9 +14,8 @@ type diffViewData struct {
 	Stats   object.FileStats
 }
 
-// GitDiff returns handler which renders commit diff
-func GitDiff(w http.ResponseWriter, r *http.Request) {
-	ctx, _ := GetRequestContext(r)
+func diffHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := getRequestContext(r)
 
 	vars := mux.Vars(r)
 	hashStr := vars["hash"]
@@ -31,7 +30,7 @@ func GitDiff(w http.ResponseWriter, r *http.Request) {
 
 	data := diffViewData{Commit: newCommitData(ctx, ref.Commit), Stats: diff}
 
-	err = RenderTemplate(w, "git-diff.html", data)
+	err = renderTemplate(w, "git-diff.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -24,11 +24,11 @@ func (c *commitData) Date() string {
 	return c.When.Format("2006-01-02")
 }
 
-func newCommitData(ctx *RequestContext, commit *object.Commit) *commitData {
+func newCommitData(ctx *requestContext, commit *object.Commit) *commitData {
 	if commit == nil {
 		return nil
 	}
-	url, _ := GetCommitURL(ctx, commit)
+	url, _ := getCommitURL(ctx, commit)
 	return &commitData{
 		Message: strings.Trim(commit.Message, "\n"),
 		Hash:    commit.Hash.String(),
@@ -37,8 +37,7 @@ func newCommitData(ctx *RequestContext, commit *object.Commit) *commitData {
 	}
 }
 
-// NotImplemented is a placeholder handler
-func NotImplemented(w http.ResponseWriter, r *http.Request) {
+func notImplemented(w http.ResponseWriter, r *http.Request) {
 	err := fmt.Errorf("Not implemented (%s) %s", mux.CurrentRoute(r).GetName(), r.URL.Path)
 	http.Error(w, err.Error(), http.StatusNotImplemented)
 }

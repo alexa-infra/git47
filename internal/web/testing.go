@@ -9,7 +9,7 @@ import (
 
 func makeTestRouter(t *testing.T) *mux.Router {
 	repos := core.MakeTestRepositories(t)
-	r, err := NewRouter(&Config{}, repos)
+	r, err := newRouter(&Config{}, repos)
 	require.Nil(t, err)
 	return r
 }

@@ -5,8 +5,7 @@ import (
 	"html/template"
 )
 
-// GetBlobURL builds URL of blob page
-func GetBlobURL(rc *RequestContext, path ...string) (string, error) {
+func getBlobURL(rc *requestContext, path ...string) (string, error) {
 	router := rc.Router
 	route := router.Get("blob")
 	if route == nil {
@@ -19,8 +18,7 @@ func GetBlobURL(rc *RequestContext, path ...string) (string, error) {
 	return joinURL(url.Path, path...), nil
 }
 
-// GetSummaryURL builds URL of summary page
-func GetSummaryURL(rc *RequestContext) (string, error) {
+func getSummaryURL(rc *requestContext) (string, error) {
 	router := rc.Router
 	route := router.Get("summary")
 	if route == nil {
@@ -33,8 +31,7 @@ func GetSummaryURL(rc *RequestContext) (string, error) {
 	return url.Path, nil
 }
 
-// GetCommitURL builds URL of commit diff
-func GetCommitURL(rc *RequestContext, commit *object.Commit) (string, error) {
+func getCommitURL(rc *requestContext, commit *object.Commit) (string, error) {
 	router := rc.Router
 	route := router.Get("commit")
 	if route == nil {
@@ -47,8 +44,7 @@ func GetCommitURL(rc *RequestContext, commit *object.Commit) (string, error) {
 	return url.Path, nil
 }
 
-// GetLogURL builds URL of commits page
-func GetLogURL(rc *RequestContext) (string, error) {
+func getLogURL(rc *requestContext) (string, error) {
 	router := rc.Router
 	route := router.Get("commits")
 	if route == nil {
@@ -61,8 +57,7 @@ func GetLogURL(rc *RequestContext) (string, error) {
 	return url.Path, nil
 }
 
-// GetTreeURL builds URL of git tree by path
-func GetTreeURL(rc *RequestContext, path ...string) (string, error) {
+func getTreeURL(rc *requestContext, path ...string) (string, error) {
 	router := rc.Router
 	route := router.Get("tree")
 	if route == nil {
@@ -75,8 +70,7 @@ func GetTreeURL(rc *RequestContext, path ...string) (string, error) {
 	return joinURL(url.Path, path...), nil
 }
 
-// GetBranchesURL builds URL of branches list page
-func GetBranchesURL(rc *RequestContext) (string, error) {
+func getBranchesURL(rc *requestContext) (string, error) {
 	router := rc.Router
 	route := router.Get("branches")
 	if route == nil {
@@ -89,8 +83,7 @@ func GetBranchesURL(rc *RequestContext) (string, error) {
 	return url.Path, nil
 }
 
-// GetTagsURL builds URL of tags list page
-func GetTagsURL(rc *RequestContext) (string, error) {
+func getTagsURL(rc *requestContext) (string, error) {
 	router := rc.Router
 	route := router.Get("tags")
 	if route == nil {
@@ -103,8 +96,7 @@ func GetTagsURL(rc *RequestContext) (string, error) {
 	return url.Path, nil
 }
 
-// GetContributorsURL builds URL of branches list page
-func GetContributorsURL(rc *RequestContext) (string, error) {
+func getContributorsURL(rc *requestContext) (string, error) {
 	router := rc.Router
 	route := router.Get("contributors")
 	if route == nil {
@@ -117,16 +109,15 @@ func GetContributorsURL(rc *RequestContext) (string, error) {
 	return url.Path, nil
 }
 
-// TemplateHelpers returns a list of helper functions used in templates
-func TemplateHelpers() template.FuncMap {
+func templateHelpers() template.FuncMap {
 	return template.FuncMap{
-		"GetSummaryURL":      GetSummaryURL,
-		"GetBlobURL":         GetBlobURL,
-		"GetTreeURL":         GetTreeURL,
-		"GetLogURL":          GetLogURL,
-		"GetBranchesURL":     GetBranchesURL,
-		"GetTagsURL":         GetTagsURL,
-		"GetContributorsURL": GetContributorsURL,
-		"GetCommitURL":       GetCommitURL,
+		"GetSummaryURL":      getSummaryURL,
+		"GetBlobURL":         getBlobURL,
+		"GetTreeURL":         getTreeURL,
+		"GetLogURL":          getLogURL,
+		"GetBranchesURL":     getBranchesURL,
+		"GetTagsURL":         getTagsURL,
+		"GetContributorsURL": getContributorsURL,
+		"GetCommitURL":       getCommitURL,
 	}
 }

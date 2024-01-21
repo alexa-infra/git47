@@ -19,7 +19,7 @@ var templateCache = map[string]*template.Template{
 	"git-commits.html": requireTemplate("git-commits.html"),
 }
 
-func RenderTemplate(wr io.Writer, name string, data interface{}) error {
+func renderTemplate(wr io.Writer, name string, data interface{}) error {
 	t, ok := templateCache[name]
 	if !ok {
 		tt, err := getTemplate(name)
@@ -29,15 +29,13 @@ func RenderTemplate(wr io.Writer, name string, data interface{}) error {
 		templateCache[name] = tt
 		t = tt
 	}
-	return renderTemplate(wr, t, data)
+	return executeTemplate(wr, t, data)
 }
 
-// GetTemplate returns template by filename, fails if there is any error
-// templates are located in env.TemplatePath and can have base layouts
 func getTemplate(name string) (*template.Template, error) {
 	layoutsPath := filepath.Join("templates", "layouts", "*.html")
 	pagePath := filepath.Join("templates", name)
-	helpers := TemplateHelpers()
+	helpers := templateHelpers()
 	return template.New(name).Funcs(helpers).ParseFS(content, layoutsPath, pagePath)
 }
 
@@ -49,9 +47,7 @@ func requireTemplate(name string) *template.Template {
 	return t
 }
 
-// RenderTemplate renders precompiled template with data
-// result is buffered, in the case of errors, nothing should be written to output
-func renderTemplate(wr io.Writer, t *template.Template, data interface{}) error {
+func executeTemplate(wr io.Writer, t *template.Template, data interface{}) error {
 	buf := new(bytes.Buffer)
 	err := t.ExecuteTemplate(buf, "layout", data)
 	if err != nil {

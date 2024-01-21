@@ -7,12 +7,11 @@ import (
 
 type summaryViewData struct {
 	core.SummaryData
-	*RequestContext
+	RequestContext *requestContext
 }
 
-// GitSummary returns handler which renders summary page of a repository
-func GitSummary(w http.ResponseWriter, r *http.Request) {
-	ctx, _ := GetRequestContext(r)
+func summaryHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := getRequestContext(r)
 
 	summary, err := core.GetSummary(ctx.Ref)
 	if err != nil {
@@ -25,7 +24,7 @@ func GitSummary(w http.ResponseWriter, r *http.Request) {
 		RequestContext: ctx,
 	}
 
-	err = RenderTemplate(w, "git-summary.html", data)
+	err = renderTemplate(w, "git-summary.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

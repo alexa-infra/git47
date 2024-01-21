@@ -14,26 +14,23 @@ type key int
 var reqContextKey key
 
 var (
-	ErrRepoNotFound = errors.New("Repository not found")
-	ErrRefNotSet    = errors.New("Ref not set")
+	errRepoNotFound = errors.New("Repository not found")
+	errRefNotSet    = errors.New("Ref not set")
 )
 
-// RequestContext carries current repository/branch extracted from request URL
-type RequestContext struct {
+type requestContext struct {
 	Ref        core.NamedReference
 	Router     *mux.Router
 	RepoConfig core.RepoConfig
 }
 
-// GetRequestContext returns currently presented RequestContext
-func GetRequestContext(r *http.Request) (*RequestContext, bool) {
+func getRequestContext(r *http.Request) (*requestContext, bool) {
 	ctx := r.Context()
-	reqCtx, ok := ctx.Value(reqContextKey).(*RequestContext)
+	reqCtx, ok := ctx.Value(reqContextKey).(*requestContext)
 	return reqCtx, ok
 }
 
-// WithRequestContext returns new request with RequestContext set up
-func WithRequestContext(r *http.Request, reqCtx *RequestContext) *http.Request {
+func withRequestContext(r *http.Request, reqCtx *requestContext) *http.Request {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, reqContextKey, reqCtx)
 	return r.WithContext(ctx)
@@ -45,7 +42,7 @@ func getRepoConfig(repositories core.RepoMap, r *http.Request) (core.RepoConfig,
 	cfg, ok := repositories[repo]
 
 	if !ok {
-		return core.RepoConfig{}, ErrRepoNotFound
+		return core.RepoConfig{}, errRepoNotFound
 	}
 	return cfg, nil
 }
@@ -55,7 +52,7 @@ func getNamedRef(g *git.Repository, r *http.Request) (core.NamedReference, error
 	ref := vars["ref"]
 
 	if ref == "" {
-		return core.NamedReference{}, ErrRefNotSet
+		return core.NamedReference{}, errRefNotSet
 	}
 
 	return core.GetNamedRef(g, ref)
@@ -72,7 +69,7 @@ func setVariables(router *mux.Router, repositories core.RepoMap, r *http.Request
 	}
 	ref, err := getNamedRef(g, r)
 	if err != nil {
-		if err != ErrRefNotSet {
+		if err != errRefNotSet {
 			return nil, err
 		}
 
@@ -81,16 +78,16 @@ func setVariables(router *mux.Router, repositories core.RepoMap, r *http.Request
 			return nil, err
 		}
 	}
-	reqCtx := &RequestContext{
+	reqCtx := &requestContext{
 		Router:     router,
 		RepoConfig: rc,
 		Ref:        ref,
 	}
-	newReq := WithRequestContext(r, reqCtx)
+	newReq := withRequestContext(r, reqCtx)
 	return newReq, nil
 }
 
-func WrapHandler(router *mux.Router, repositories core.RepoMap) func(func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+func wrapHandler(router *mux.Router, repositories core.RepoMap) func(func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 		handler := http.HandlerFunc(fn)
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

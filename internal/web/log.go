@@ -6,13 +6,12 @@ import (
 )
 
 type commitsViewData struct {
-	Commits []commitData
-	*RequestContext
+	Commits        []commitData
+	RequestContext *requestContext
 }
 
-// GitLog returns handler which renders a list of commits
-func GitLog(w http.ResponseWriter, r *http.Request) {
-	ctx, ok := GetRequestContext(r)
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, ok := getRequestContext(r)
 	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
@@ -41,7 +40,7 @@ func GitLog(w http.ResponseWriter, r *http.Request) {
 		data.Commits = append(data.Commits, *newCommitData(ctx, c))
 	}
 
-	err = RenderTemplate(w, "git-commits.html", data)
+	err = renderTemplate(w, "git-commits.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

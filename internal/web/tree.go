@@ -14,19 +14,18 @@ type fileData struct {
 }
 
 type treeViewData struct {
-	Files      []fileData
-	Dirs       []fileData
-	Path       string
-	LastCommit *commitData
-	*RequestContext
+	Files          []fileData
+	Dirs           []fileData
+	Path           string
+	LastCommit     *commitData
+	RequestContext *requestContext
 }
 
-// GitTree returns handler which renders file-tree of ref/path
-func GitTree(w http.ResponseWriter, r *http.Request) {
-	ctx, _ := GetRequestContext(r)
+func treeHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := getRequestContext(r)
 	ref := ctx.Ref
 
-	baseURL, err := GetTreeURL(ctx)
+	baseURL, err := getTreeURL(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -51,7 +50,7 @@ func GitTree(w http.ResponseWriter, r *http.Request) {
 
 	newFileData := func(name string) fileData {
 		lastCommit, _ := core.GetLastCommit(ref, path, name)
-		url, _ := GetBlobURL(ctx, path, name)
+		url, _ := getBlobURL(ctx, path, name)
 		return fileData{
 			Name:   name,
 			URL:    url,
@@ -62,7 +61,7 @@ func GitTree(w http.ResponseWriter, r *http.Request) {
 
 	newFolderData := func(name string) fileData {
 		lastCommit, _ := core.GetLastCommit(ref, path, name)
-		url, _ := GetTreeURL(ctx, path, name)
+		url, _ := getTreeURL(ctx, path, name)
 		return fileData{
 			Name:   name,
 			URL:    url,
@@ -90,7 +89,7 @@ func GitTree(w http.ResponseWriter, r *http.Request) {
 		data.LastCommit = newCommitData(ctx, ref.Commit)
 	}
 
-	err = RenderTemplate(w, "git-tree.html", data)
+	err = renderTemplate(w, "git-tree.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
