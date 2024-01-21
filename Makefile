@@ -5,11 +5,11 @@ FA_FONTS_SOURCE := $(wildcard $(FA_DIR)/*.ttf) $(wildcard $(FA_DIR)/*.woff) $(wi
 FA_FONTS_TARGET := $(patsubst $(FA_DIR)/%, internal/web/static/webfonts/%, $(FA_FONTS_SOURCE))
 
 git47: $(GO_SRC) static
-	go build -o git47 main.go
+	go build -o git47 cmd/serve/main.go
 
 check:
-	gofmt -l -w ./internal/**/*.go main.go
-	golint ./...
+	gofmt -l -w $(GO_SRC)
+	golint $(GO_SRC)
 
 clean:
 	rm git47
