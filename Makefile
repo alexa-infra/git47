@@ -15,11 +15,13 @@ clean:
 	rm git47
 	rm -r internal/web/static
 
-internal/web/static/css/styles.css: css/styles.css css/content.css
-	npx postcss css/styles.css -o $@
+internal/web/static/css/styles.css: css/styles.css css/content.css tailwind.config.js tailwindcss-cli
+	@test -d $(dir $@) || mkdir -p $(dir $@)
+	./tailwindcss-cli -i css/styles.css -o $@
 
-internal/web/static/css/fontawesome.css: css/fontawesome.css
-	npx postcss $< -o $@
+internal/web/static/css/fontawesome.css: css/fontawesome.css tailwindcss-cli
+	@test -d $(dir $@) || mkdir -p $(dir $@)
+	./tailwindcss-cli -i $< -o $@
 
 internal/web/static/favicon.ico: css/favicon.ico
 	@test -d internal/web/static || mkdir internal/web/static

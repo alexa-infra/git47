@@ -2,3 +2,4 @@ git47
 node_modules/
 static/
 internal/web/static/
+tailwindcss-cli
