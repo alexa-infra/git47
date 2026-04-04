@@ -1,12 +1,12 @@
 package core
 
 import (
-	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/go-git/go-billy/v5/util"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/go-git/go-billy/v6/memfs"
+	"github.com/go-git/go-billy/v6/util"
+	"github.com/go-git/go-git/v6"
+	"github.com/go-git/go-git/v6/plumbing"
+	"github.com/go-git/go-git/v6/plumbing/object"
+	"github.com/go-git/go-git/v6/storage/memory"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -25,7 +25,7 @@ func defaultSignature() *object.Signature {
 func MakeTestRepository(t *testing.T) *git.Repository {
 	storage := memory.NewStorage()
 	fs := memfs.New()
-	r, err := git.Init(storage, fs)
+	r, err := git.Init(storage, git.WithWorkTree(fs))
 	require.Nil(t, err)
 
 	err = util.WriteFile(fs, "foo", nil, 0755)

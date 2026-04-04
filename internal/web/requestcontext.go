@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/alexa-infra/git47/internal/core"
-	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v6"
 	"github.com/gorilla/mux"
 	"net/http"
 )

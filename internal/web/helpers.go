@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v6/plumbing/object"
 	"html/template"
 )
 

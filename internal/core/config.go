@@ -1,7 +1,7 @@
 package core
 
 import (
-	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v6"
 )
 
 type RepoConfig struct {
